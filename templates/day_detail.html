@@ -1,1 +1,199 @@
 <!-- (日付クリック後のTODO/タイマー画面) -->
+ <!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+    /* 全体の基本設定 */
+    body {
+        font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+        background-color: #f2f2f7; /* 背景色（薄いグレー） */
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* アプリのウィンドウ枠（想定） */
+    .app-container {
+        width: 400px;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        overflow: hidden; /* 角丸からはみ出さないように */
+    }
+
+    /* ヘッダー */
+    .header {
+        background-color: #f9f9f9;
+        padding: 15px;
+        text-align: center;
+        border-bottom: 1px solid #e0e0e0;
+        font-weight: bold;
+        color: #333;
+    }
+
+    /* --- リスト部分のスタイル --- */
+    .todo-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* リストの各アイテム（行） */
+    .todo-item {
+        border-bottom: 1px solid #e5e5ea; /* 薄い区切り線 */
+        cursor: pointer; /* クリックできることを示す指マーク */
+        transition: background-color 0.2s;
+        position: relative;
+    }
+
+    /* 本物のラジオボタンは隠す（見た目が邪魔なため） */
+    .todo-item input[type="radio"] {
+        display: none;
+    }
+
+    /* ラベル（ここが実際のクリック領域） */
+    .item-content {
+        display: flex; /* 横並びにする */
+        justify-content: space-between; /* 左右に配置 */
+        align-items: center; /* 上下中央揃え */
+        padding: 15px 20px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* 選択された時のデザイン（背景色を変える） */
+    .todo-item input[type="radio"]:checked + .item-content {
+        background-color: #e3f2fd; /* 薄い青色 */
+        border-left: 5px solid #007aff; /* 左に青い線で強調 */
+    }
+
+    /* 科目名（左上） */
+    .subject-name {
+        font-size: 18px;
+        font-weight: bold;
+        color: #000;
+        display: block;
+    }
+
+    /* 目標時間（左下） */
+    .target-time {
+        font-size: 12px;
+        color: #8e8e93;
+        margin-top: 4px;
+        display: block;
+    }
+
+    /* 勉強時間（右側） */
+    .study-log {
+        text-align: right;
+    }
+
+    .today-label {
+        font-size: 10px;
+        color: #8e8e93;
+    }
+
+    .current-time {
+        font-size: 14px;
+        font-weight: bold;
+        color: #007aff; /* 青文字 */
+        display: block;
+    }
+
+    /* メダルアイコン（簡易的な円） */
+    .medal {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        background-color: #ffcc00; /* 金色 */
+        border-radius: 50%;
+        text-align: center;
+        line-height: 20px;
+        font-size: 10px;
+        color: white;
+        margin-left: 5px;
+    }
+
+    /* --- 追加ボタン（＋） --- */
+    .add-button-area {
+        padding: 15px;
+        text-align: center;
+        background-color: white;
+        cursor: pointer;
+    }
+
+    .add-button-area:hover {
+        background-color: #f0f0f0;
+    }
+
+    .plus-icon {
+        font-size: 30px;
+        color: #007aff; /* 青色 */
+        line-height: 1;
+    }
+
+</style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">科目管理</div>
+
+        <div class="todo-list">
+            
+            <label class="todo-item">
+                <input type="radio" name="subject_select" checked> 
+                
+                <div class="item-content">
+                    <div class="left-info">
+                        <span class="subject-name">英語</span>
+                        <span class="target-time">目標: 20分</span>
+                    </div>
+                    
+                    <div class="study-log">
+                        <span class="today-label">今日</span>
+                        <span class="current-time">55分 5秒 <span class="medal">★</span></span>
+                    </div>
+                </div>
+            </label>
+
+            <label class="todo-item">
+                <input type="radio" name="subject_select">
+                <div class="item-content">
+                    <div class="left-info">
+                        <span class="subject-name">数学</span>
+                        <span class="target-time">目標: 30分</span>
+                    </div>
+                    <div class="study-log">
+                        <span class="today-label">今日</span>
+                        <span class="current-time">5分</span>
+                    </div>
+                </div>
+            </label>
+
+            <label class="todo-item">
+                <input type="radio" name="subject_select">
+                <div class="item-content">
+                    <div class="left-info">
+                        <span class="subject-name">デッサン</span>
+                        <span class="target-time">目標: 60分</span>
+                    </div>
+                    <div class="study-log">
+                        <span class="today-label">今日</span>
+                        <span class="current-time">--分</span>
+                    </div>
+                </div>
+            </label>
+
+        </div>
+
+        <div class="add-button-area" onclick="alert('TODO追加画面を開く')">
+            <span class="plus-icon">＋</span>
+        </div>
+
+    </div>
+
+</body>
+</html>
