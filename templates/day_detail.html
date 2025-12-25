@@ -1,1 +1,192 @@
-<!-- (日付クリック後のTODO/タイマー画面) -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+    /* --- CSSは変更なし --- */
+    body {
+        font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+        background-color: #f2f2f7;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+    }
+    .app-container {
+        width: 400px;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .header {
+        background-color: #f9f9f9;
+        padding: 15px;
+        text-align: center;
+        border-bottom: 1px solid #e0e0e0;
+        font-weight: bold;
+        color: #333;
+    }
+    .todo-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .todo-item {
+        border-bottom: 1px solid #e5e5ea;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        position: relative;
+    }
+    .todo-item input[type="radio"] {
+        display: none;
+    }
+    .item-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    /* 選択中の色変更（クリックした瞬間に遷移するなら、この色は一瞬しか見えませんが残しておきます） */
+    .todo-item input[type="radio"]:checked + .item-content {
+        background-color: #e3f2fd;
+        border-left: 5px solid #007aff;
+    }
+    .subject-name {
+        font-size: 18px;
+        font-weight: bold;
+        color: #000;
+        display: block;
+    }
+    .target-time {
+        font-size: 12px;
+        color: #8e8e93;
+        margin-top: 4px;
+        display: block;
+    }
+    .study-log {
+        text-align: right;
+    }
+    .today-label {
+        font-size: 10px;
+        color: #8e8e93;
+    }
+    .current-time {
+        font-size: 14px;
+        font-weight: bold;
+        color: #007aff;
+        display: block;
+    }
+    .medal {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        background-color: #ffcc00;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 20px;
+        font-size: 10px;
+        color: white;
+        margin-left: 5px;
+    }
+    .add-button-area {
+        padding: 15px;
+        text-align: center;
+        background-color: white;
+        cursor: pointer;
+    }
+    .add-button-area:hover {
+        background-color: #f0f0f0;
+    }
+    .plus-icon {
+        font-size: 30px;
+        color: #007aff;
+        line-height: 1;
+    }
+</style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">科目管理</div>
+
+        <div class="todo-list">
+            
+            <label class="todo-item" onclick="goToTimer('英語', '20分')">
+                <input type="radio" name="subject_select" checked> 
+                <div class="item-content">
+                    <div class="left-info">
+                        <span class="subject-name">英語</span>
+                        <span class="target-time">目標: 20分</span>
+                    </div>
+                    <div class="study-log">
+                        <span class="today-label">今日</span>
+                        <span class="current-time">55分 5秒 <span class="medal">★</span></span>
+                    </div>
+                </div>
+            </label>
+
+            <label class="todo-item" onclick="goToTimer('数学', '30分')">
+                <input type="radio" name="subject_select">
+                <div class="item-content">
+                    <div class="left-info">
+                        <span class="subject-name">数学</span>
+                        <span class="target-time">目標: 30分</span>
+                    </div>
+                    <div class="study-log">
+                        <span class="today-label">今日</span>
+                        <span class="current-time">5分</span>
+                    </div>
+                </div>
+            </label>
+
+            <label class="todo-item" onclick="goToTimer('デッサン', '60分')">
+                <input type="radio" name="subject_select">
+                <div class="item-content">
+                    <div class="left-info">
+                        <span class="subject-name">デッサン</span>
+                        <span class="target-time">目標: 60分</span>
+                    </div>
+                    <div class="study-log">
+                        <span class="today-label">今日</span>
+                        <span class="current-time">--分</span>
+                    </div>
+                </div>
+            </label>
+
+        </div>
+
+        <div class="add-button-area" onclick="openAddScreen()">
+            <span class="plus-icon">＋</span>
+        </div>
+
+    </div>
+
+    <script>
+        /**
+         * TODOをクリックしたときに呼ばれる関数
+         * @param {string} subject - 科目名
+         * @param {string} target - 目標時間
+         */
+        function goToTimer(subject, target) {
+            // ここでPython側に「画面を切り替えて！」と命令を送ることになります。
+            // 今はアラートでシミュレーションします。
+            alert("【画面遷移】\n「" + subject + "」のタイマーを開始します。\n目標時間は " + target + " です。");
+            
+            // 将来的なPython(Eelなど)との連携イメージ:
+            // eel.start_timer(subject); 
+            // window.location.href = 'timer.html';
+        }
+
+        /**
+         * 追加ボタンを押したときの関数
+         */
+        function openAddScreen() {
+            alert("【画面遷移】\n新しいTODOを追加する画面へ移動します。");
+        }
+    </script>
+
+</body>
+</html>
