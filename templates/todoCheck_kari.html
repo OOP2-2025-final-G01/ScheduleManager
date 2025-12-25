@@ -1,27 +1,3 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>学習管理システム - 警告機能</title>
-    <style>
-        .alert-box {
-            background-color: #fff0f0;
-            border: 2px solid #ff4d4d;
-            padding: 20px;
-            margin: 20px;
-            border-radius: 10px;
-        }
-        .overdue-tag {
-            background-color: #ff4d4d;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8em;
-            margin-right: 10px;
-        }
-        .date-text { color: #666; font-size: 0.9em; }
-    </style>
-</head>
 <body>
     <h1>学習ダッシュボード</h1>
     <p>今日は <strong>{{ today }}</strong> です。</p>
@@ -34,8 +10,8 @@
             {% for task in tasks %}
             <li style="margin-bottom: 10px;">
                 <span class="overdue-tag">期限切れ</span>
-                <strong>{{ task.name }}</strong> 
-                <span class="date-text">(予定日: {{ task.date }})</span>
+                <strong>{{ task.task }}</strong> 
+                <span class="date-text">(予定日: {{ task.due_date }})</span>
             </li>
             {% endfor %}
         </ul>
