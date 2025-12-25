@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for
 todo_bp = Blueprint('todo', __name__)
 
 def get_db_connection():
-    conn = sqlite3.connect("todo_list.db")
+    conn = sqlite3.connect("main.db")
     conn.row_factory = sqlite3.Row
     return conn
 
