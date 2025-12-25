@@ -1,29 +1,24 @@
-<!-- (日付クリック後のTODO/タイマー画面) -->
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <style>
-    /* 全体の基本設定 */
+    /* --- CSSは変更なし --- */
     body {
         font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-        background-color: #f2f2f7; /* 背景色（薄いグレー） */
+        background-color: #f2f2f7;
         margin: 0;
         padding: 20px;
         display: flex;
         justify-content: center;
     }
-
-    /* アプリのウィンドウ枠（想定） */
     .app-container {
         width: 400px;
         background-color: white;
         border-radius: 12px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        overflow: hidden; /* 角丸からはみ出さないように */
+        overflow: hidden;
     }
-
-    /* ヘッダー */
     .header {
         background-color: #f9f9f9;
         padding: 15px;
@@ -32,82 +27,63 @@
         font-weight: bold;
         color: #333;
     }
-
-    /* --- リスト部分のスタイル --- */
     .todo-list {
         list-style: none;
         padding: 0;
         margin: 0;
     }
-
-    /* リストの各アイテム（行） */
     .todo-item {
-        border-bottom: 1px solid #e5e5ea; /* 薄い区切り線 */
-        cursor: pointer; /* クリックできることを示す指マーク */
+        border-bottom: 1px solid #e5e5ea;
+        cursor: pointer;
         transition: background-color 0.2s;
         position: relative;
     }
-
-    /* 本物のラジオボタンは隠す（見た目が邪魔なため） */
     .todo-item input[type="radio"] {
         display: none;
     }
-
-    /* ラベル（ここが実際のクリック領域） */
     .item-content {
-        display: flex; /* 横並びにする */
-        justify-content: space-between; /* 左右に配置 */
-        align-items: center; /* 上下中央揃え */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         padding: 15px 20px;
         width: 100%;
         box-sizing: border-box;
     }
-
-    /* 選択された時のデザイン（背景色を変える） */
+    /* 選択中の色変更（クリックした瞬間に遷移するなら、この色は一瞬しか見えませんが残しておきます） */
     .todo-item input[type="radio"]:checked + .item-content {
-        background-color: #e3f2fd; /* 薄い青色 */
-        border-left: 5px solid #007aff; /* 左に青い線で強調 */
+        background-color: #e3f2fd;
+        border-left: 5px solid #007aff;
     }
-
-    /* 科目名（左上） */
     .subject-name {
         font-size: 18px;
         font-weight: bold;
         color: #000;
         display: block;
     }
-
-    /* 目標時間（左下） */
     .target-time {
         font-size: 12px;
         color: #8e8e93;
         margin-top: 4px;
         display: block;
     }
-
-    /* 勉強時間（右側） */
     .study-log {
         text-align: right;
     }
-
     .today-label {
         font-size: 10px;
         color: #8e8e93;
     }
-
     .current-time {
         font-size: 14px;
         font-weight: bold;
-        color: #007aff; /* 青文字 */
+        color: #007aff;
         display: block;
     }
-
-    /* メダルアイコン（簡易的な円） */
     .medal {
         display: inline-block;
         width: 20px;
         height: 20px;
-        background-color: #ffcc00; /* 金色 */
+        background-color: #ffcc00;
         border-radius: 50%;
         text-align: center;
         line-height: 20px;
@@ -115,25 +91,20 @@
         color: white;
         margin-left: 5px;
     }
-
-    /* --- 追加ボタン（＋） --- */
     .add-button-area {
         padding: 15px;
         text-align: center;
         background-color: white;
         cursor: pointer;
     }
-
     .add-button-area:hover {
         background-color: #f0f0f0;
     }
-
     .plus-icon {
         font-size: 30px;
-        color: #007aff; /* 青色 */
+        color: #007aff;
         line-height: 1;
     }
-
 </style>
 </head>
 <body>
@@ -143,15 +114,13 @@
 
         <div class="todo-list">
             
-            <label class="todo-item">
+            <label class="todo-item" onclick="goToTimer('英語', '20分')">
                 <input type="radio" name="subject_select" checked> 
-                
                 <div class="item-content">
                     <div class="left-info">
                         <span class="subject-name">英語</span>
                         <span class="target-time">目標: 20分</span>
                     </div>
-                    
                     <div class="study-log">
                         <span class="today-label">今日</span>
                         <span class="current-time">55分 5秒 <span class="medal">★</span></span>
@@ -159,7 +128,7 @@
                 </div>
             </label>
 
-            <label class="todo-item">
+            <label class="todo-item" onclick="goToTimer('数学', '30分')">
                 <input type="radio" name="subject_select">
                 <div class="item-content">
                     <div class="left-info">
@@ -173,7 +142,7 @@
                 </div>
             </label>
 
-            <label class="todo-item">
+            <label class="todo-item" onclick="goToTimer('デッサン', '60分')">
                 <input type="radio" name="subject_select">
                 <div class="item-content">
                     <div class="left-info">
@@ -189,11 +158,35 @@
 
         </div>
 
-        <div class="add-button-area" onclick="alert('TODO追加画面を開く')">
+        <div class="add-button-area" onclick="openAddScreen()">
             <span class="plus-icon">＋</span>
         </div>
 
     </div>
+
+    <script>
+        /**
+         * TODOをクリックしたときに呼ばれる関数
+         * @param {string} subject - 科目名
+         * @param {string} target - 目標時間
+         */
+        function goToTimer(subject, target) {
+            // ここでPython側に「画面を切り替えて！」と命令を送ることになります。
+            // 今はアラートでシミュレーションします。
+            alert("【画面遷移】\n「" + subject + "」のタイマーを開始します。\n目標時間は " + target + " です。");
+            
+            // 将来的なPython(Eelなど)との連携イメージ:
+            // eel.start_timer(subject); 
+            // window.location.href = 'timer.html';
+        }
+
+        /**
+         * 追加ボタンを押したときの関数
+         */
+        function openAddScreen() {
+            alert("【画面遷移】\n新しいTODOを追加する画面へ移動します。");
+        }
+    </script>
 
 </body>
 </html>
