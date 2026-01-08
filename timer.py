@@ -75,4 +75,4 @@ def stop_python_timer():
     eel.update_list_item(current_subject, result_str, is_goal_met)
 
 # アプリ起動
-eel.start('day_detail.html', size=(450, 600))
+eel.start('day_detail.html', mode='default', host='0.0.0.0', port=8000)
