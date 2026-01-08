@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os
 import sqlite3
+import todoCheck
 
 app = Flask(__name__)
 
@@ -11,7 +12,9 @@ def get_db_connection():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    overdue_tasks, today_str = todoCheck.get_incomplete_tasks()
+    # 取得したリストを「tasks」という名前で index.html へ送る
+    return render_template('index.html', tasks=overdue_tasks)
 
 @app.route('/due_date/<due_date>')
 def day_detail(due_date):
