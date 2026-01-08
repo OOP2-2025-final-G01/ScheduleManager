@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 
+
 <meta charset="UTF-8">
 <script type="text/javascript" src="/eel.js"></script>
 <style>
@@ -33,17 +34,13 @@
     .stop-btn { background-color: #ff3b30; color: white; border: none; padding: 10px 40px; font-size: 18px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
     .modal-subject { font-size: 24px; color: #007aff; font-weight: bold; }
 </style>
+
 </head>
 <body>
+    <div class="container">
+        <a href="/" style="text-decoration: none; color: #007aff;">← 戻る</a>
+        <h2>{{ due_date }} の予定</h2>
 
-    <div class="app-container">
-        <div class="header">科目管理</div>
-
-        <div id="timer-modal">
-            <div class="modal-subject" id="modal-subject-text">科目名</div>
-            <div class="timer-display" id="time-display">00:00</div>
-            <button class="stop-btn" onclick="stopTimer()">STOP</button>
-        </div>
 
         <div class="todo-list" id="todo-list-container">
             </div>
@@ -138,6 +135,7 @@
             }
         }
     </script>
+
 
 
 </body>
