@@ -1,7 +1,6 @@
 import sqlite3
 from flask import Blueprint, render_template, request, redirect, url_for
 
-# Blueprintの定義
 todo_bp = Blueprint('todo', __name__)
 
 def get_db_connection():
@@ -9,25 +8,36 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# 1. TODO一覧の表示
-@todo_bp.route('/')
-def index():
-    conn = get_db_connection()
-    # 最新の投稿が上にくるように ID の降順で取得
-    todos = conn.execute("SELECT * FROM todos ORDER BY id DESC").fetchall()
-    conn.close()
-    return render_template('index.html', todos=todos)
 
-# 2. TODOの追加（「やること」だけを入力）
-@todo_bp.route('/add', methods=['POST'])
-def add():
-    # フォームの 'task_name' という名前のデータを受け取る
+# 1. 特定の日付のTODO一覧を表示
+
+@todo_bp.route('/date/<selected_date>')
+def index_by_date(selected_date):
+    conn = get_db_connection()
+
+    # 渡された日付に一致するTODOを取得
+    todos = conn.execute("SELECT * FROM todos WHERE date = ? ORDER BY id DESC", (selected_date,)).fetchall()
+    conn.close()
+    return render_template('day_detail.html', todos=todos, date=selected_date)
+
+
+# 2. TODOの追加 (日付を紐付け)
+@todo_bp.route('/add/<selected_date>', methods=['POST'])
+def add(selected_date):
     task_content = request.form.get('task_name')
-    
     if task_content and task_content.strip():
         conn = get_db_connection()
-        conn.execute("INSERT INTO todos (task) VALUES (?)", (task_content,))
+        # dateカラムにも値を保存
+        conn.execute("INSERT INTO todos (task, date) VALUES (?, ?)", (task_content, selected_date))
         conn.commit()
         conn.close()
-        
-    return redirect(url_for('todo.index'))
+    return redirect(url_for('todo.index_by_date', selected_date=selected_date))
+
+# 3. TODOの削除
+@todo_bp.route('/delete/<int:task_id>/<selected_date>', methods=['POST'])
+def delete(task_id, selected_date):
+    conn = get_db_connection()
+    conn.execute("DELETE FROM todos WHERE id = ?", (task_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('todo.index_by_date', selected_date=selected_date))
