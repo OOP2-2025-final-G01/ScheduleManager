@@ -1,1 +1,47 @@
-<!-- (日付クリック後のTODO/タイマー画面) -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        /* 既存のCSSはそのまま使用 */
+        body { font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f2f2f7; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .app-container { width: 400px; background-color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
+        .header { background-color: #f9f9f9; padding: 15px; text-align: center; border-bottom: 1px solid #e0e0e0; font-weight: bold; color: #333; }
+        .todo-list { list-style: none; padding: 0; margin: 0; }
+        .todo-item { border-bottom: 1px solid #e5e5ea; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
+        .subject-name { font-size: 18px; font-weight: bold; color: #000; }
+        
+        .delete-btn { background-color: #ff3b30; color: white; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+        .add-form { padding: 15px; border-top: 1px solid #e0e0e0; display: flex; gap: 10px; }
+        .add-input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+        .back-link { margin-bottom: 10px; text-decoration: none; color: #007aff; }
+    </style>
+</head>
+<body>
+
+    <a href="/" class="back-link">← カレンダーに戻る</a>
+
+    <div class="app-container">
+        <div class="header">{{ date }} の予定</div>
+
+        <div class="todo-list">
+            {% for todo in todos %}
+            <div class="todo-item">
+                <div class="left-info">
+                    <span class="subject-name">{{ todo.task }}</span>
+                </div>
+                <form action="{{ url_for('todo.delete', task_id=todo.id, selected_date=date) }}" method="POST">
+                    <button type="submit" class="delete-btn" onclick="return confirm('削除しますか？')">削除</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <form class="add-form" action="{{ url_for('todo.add', selected_date=date) }}" method="POST">
+            <input type="text" name="task_name" class="add-input" placeholder="新しい予定を追加" required>
+            <button type="submit" style="background: none; border: none; font-size: 24px; color: #007aff; cursor: pointer;">＋</button>
+        </form>
+    </div>
+
+</body>
+</html>
