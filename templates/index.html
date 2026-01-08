@@ -1,146 +1,155 @@
 <!doctype html>
 <html lang="ja">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Schedule Manager - ダッシュボード</title>
-		<style>
-			/* 全体レイアウト：上部がダッシュボード（2/3相当）、下部がカレンダー（約1/3） */
-			html, body { height: 100%; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif; color:#222; }
-			.container { display: flex; flex-direction: column; height: 100vh; }
-			.header { background: linear-gradient(90deg,#34495e,#2c3e50); color: #fff; padding: 16px 20px; }
-			.header h1 { margin: 0; font-size: 1.2rem; }
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Schedule Manager - ダッシュボード</title>
+        <style>
+            /* 元のベーススタイルに完全一致 */
+            html, body { height: 100%; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#222; }
+            .container { display: flex; flex-direction: column; height: 100vh; }
+            
+            /* ヘッダーの配色を一致 */
+            .header { background: #34495e; color: #fff; padding: 16px 20px; }
+            .header h1 { margin: 0; font-size: 1.2rem; }
 
-			/* 上部コンテンツ */
-			.top-area { flex: 0 0 auto; padding: 12px 12px 8px 12px; overflow: visible; background: #fff; }
-			.top-grid { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
-			.panel { background: #fafafa; border: 1px solid #e6e6e6; padding: 12px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
-			
-			/* ★見出しの下線を削除 */
-			.panel h2 { margin-top: 0; font-size: 1.1rem; }
+            /* 上部パネル */
+            .top-area { flex: 0 0 auto; padding: 12px; background: #fff; }
+            .top-grid { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+            .panel { background: #fff; border: 1px solid #e0e0e0; padding: 12px; border-radius: 4px; }
+            .panel h2 { margin-top: 0; font-size: 1rem; color: #333; }
 
-			/* カレンダー部分 */
-			.calendar-area { height: 33vh; min-height: 200px; max-height: 40vh; border-top: 1px solid rgba(224,224,224,0.7); background: #f7f9fb; padding: 8px 12px; box-sizing: border-box; margin-top: 0; }
-			/* カレンダー領域を relative にしてオーバーレイ配置を可能にする */
-			.calendar-area { position: relative; }
-			.calendar { height: 100%; display:flex; flex-direction:column; padding-bottom: 160px; }
-			.cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
-			.cal-header .title { font-weight: 600; }
-			.cal-controls button { background: #2c3e50; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; margin-left:6px; }
-			.weekdays { display:grid; grid-template-columns: repeat(7,1fr); text-align:center; font-weight:600; color:#555; margin-bottom:6px; }
-			.days { display:grid; grid-template-columns: repeat(7,1fr); grid-auto-rows: 1fr; gap:6px; flex:1; }
-			.day { background: white; border:1px solid #e6e6e6; border-radius:6px; padding:6px; box-sizing:border-box; font-size:0.9rem; display:flex; flex-direction:column; }
-			.day .date { font-weight:600; margin-bottom:6px; }
-			.day.other-month { opacity:0.45; }
+            /* 今日の予定：ご要望の「文字だけ横並び」スタイル */
+            .simple-text-list {
+                display: flex;
+                gap: 20px;
+                overflow-x: auto;
+                padding: 10px 0;
+                font-size: 0.95rem;
+                white-space: nowrap;
+            }
 
-			/* 今日の日付の強調スタイル */
-			.day.today {
-				background-color: #fffde7;
-				border: 2px solid #fbc02d;
-			}
+            /* カレンダーエリア：構造を一致 */
+            .calendar-area { 
+                position: relative; 
+                flex: 1; 
+                background: #fff; 
+                padding: 12px; 
+                display: flex; 
+                flex-direction: column;
+            }
+            .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+            .cal-header .title { font-weight: bold; font-size: 1.1rem; }
+            .cal-controls button { background: #34495e; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; margin-left: 4px; }
 
-			/* カレンダー右下に表示するグラフ用コンテナ */
-			.calendar-chart {
-				position: absolute;
-				right: -8px; /* 右端からはみ出す */
-				left: auto;
-				bottom: 18px; /* 下端に寄せる */
-				width: 160px; /* 一回り大きく */
-				height: 128px;
-				background: rgba(255,255,255,0.98);
-				border-radius: 8px;
-				display:flex;
-				flex-direction:column;
-				align-items:center;
-				justify-content:center;
-				box-shadow: 0 8px 22px rgba(0,0,0,0.10);
-				padding:8px;
-				box-sizing:border-box;
-				z-index: 9999;
-			}
+            .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #555; padding-bottom: 8px; }
+            .days { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 1fr; gap: 4px; flex: 1; }
+            
+            /* 日付マス：元の枠線・配色スタイル */
+            .day { 
+                background: #fff; 
+                border: 1px solid #eee; 
+                border-radius: 4px; 
+                padding: 6px; 
+                position: relative; 
+                cursor: pointer;
+            }
+            .day .date { font-weight: bold; color: #777; font-size: 0.85rem; }
+            
+            /* 今日の日付（黄色） */
+            .day.today { background-color: #fffde7; border: 1px solid #fbc02d; }
+            .day.today .date { color: #000; }
+            .day.other-month .date { color: #ccc; }
 
-			.calendar-chart canvas { width: 100% !important; height: auto !important; }
-			.calendar-chart canvas { max-width: 140px; }
+            /* 達成率グラフ：左下に「重ねる」ためのスタイル */
+            .calendar-chart {
+                position: absolute;
+                left: 20px;
+                bottom: 20px;
+                width: 130px; 
+                height: 130px;
+                background: rgba(255, 255, 255, 0.98); /* 下が少し透ける白 */
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                z-index: 1000; /* カレンダーのマス目より上に表示 */
+            }
+            .calendar-chart canvas { width: 100% !important; height: 80px !important; }
+            .chart-label { font-size: 0.65rem; color: #888; margin-top: 4px; }
+            .chart-center-badge { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; font-size: 0.9rem; }
 
-			.calendar-chart .chart-label { font-size:0.7rem; color:#555; margin-top:6px; }
+            @media (max-width:700px){ .top-grid { grid-template-columns: 1fr; } .calendar-chart { display: none; } }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header class="header">
+                <h1>Schedule Manager - ダッシュボード</h1>
+            </header>
 
-			@media (max-width:700px){ .top-grid { grid-template-columns: 1fr; } }
-		</style>
-	</head>
-	<body>
-		<div class="container">
-			<header class="header">
-				<h1>Schedule Manager - ダッシュボード</h1>
-			</header>
+            <main class="top-area">
+                <div class="top-grid">
+                    <section class="panel">
+                        <h2 id="todayTitle">今日の予定 (1月8日)</h2>
+                        <div class="simple-text-list">
+                            {% if today_todos %}
+                                {% for todo in today_todos %}
+                                    <span>{{ todo.task }} ({{ todo.actual_time }}分)</span>
+                                {% endfor %}
+                            {% else %}
+                                <span style="color:#888;">予定なし</span>
+                            {% endif %}
+                        </div>
+                    </section>
 
-			<main class="top-area">
-				<div class="top-grid">
-					<section class="panel">
-						<h2 id="todayTitle">今日の予定</h2>
-						<p>ここに Bさん（TODO）から渡された今日の予定が表示されます。（例：英語 30分）</p>
-					</section>
+                    <aside class="panel">
+                        <h2>やり残し</h2>
+                        {% if tasks %}
+                            <ul style="padding-left: 20px; margin: 0; color: #e74c3c; font-weight: bold; font-size: 0.9rem;">
+                                {% for task in tasks %}
+                                    <li>{{ task.task }} ({{ task.due_date }})</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p style="color: #27ae60; margin: 0; font-size: 0.9rem;">🎉 やり残しはありません！</p>
+                        {% endif %}
+                    </aside>
+                </div>
+            </main>
 
+            <section class="calendar-area">
+                <div class="calendar" id="calendarRoot">
+                    <div class="cal-header">
+                        <div class="title" id="calTitle"></div>
+                        <div class="cal-controls">
+                            <button id="prevBtn">◀</button>
+                            <button id="nextBtn">▶</button>
+                        </div>
+                    </div>
+                    <div class="weekdays">
+                        <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+                    </div>
+                    <div class="days" id="daysGrid"></div>
+                </div>
 
-					<aside class="panel">
-						{% if tasks %}
-							<ul style="padding-left: 20px; margin: 0; color: #c0392b; font-weight: bold;">
-								{% for task in tasks %}
-									<li style="margin-bottom: 8px;">
-										{{ task.task }} 
-										<span style="font-size: 0.8rem; color: #666; font-weight: normal;">
-											(期限: {{ task.due_date }})
-										</span>
-									</li>
-								{% endfor %}
-							</ul>
-						{% else %}
-							<p style="color: #27ae60; margin: 0;">🎉 やり残しはありません！</p>
-						{% endif %}
-					</aside>
+                <div class="calendar-chart" id="chartContainer">
+                    <canvas id="completionChart"></canvas>
+                    <div class="chart-label">今月の達成率</div>
+                </div>
+            </section>
+        </div>
 
-				</div>
-			</main>
-
-			<section class="calendar-area">
-				<div class="calendar" id="calendarRoot">
-					<div class="cal-header">
-						<div class="title" id="calTitle">Loading...</div>
-						<div class="cal-controls">
-							<button id="prevBtn">◀</button>
-							<button id="nextBtn">▶</button>
-						</div>
-					</div>
-					<div class="weekdays">
-						<div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
-					</div>
-					<div class="days" id="daysGrid"></div>
-				</div>
-				
-					<!-- カレンダー右下に月間達成率グラフを重ねて表示 -->
-					<div class="calendar-chart">
-						<canvas id="completionChart" width="160" height="120"></canvas>
-						<div class="chart-label">今月の達成率</div>
-					</div>
-				</section>
-		</div>
-
-		<script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
         (function(){
-            const titleEl = document.getElementById('calTitle');
             const daysGrid = document.getElementById('daysGrid');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const todayTitleEl = document.getElementById('todayTitle');
-
+            const titleEl = document.getElementById('calTitle');
             const today = new Date();
-            const todayYear = today.getFullYear();
-            const todayMonth = today.getMonth();
-            const todayDate = today.getDate();
-
-            todayTitleEl.textContent = `今日の予定 (${todayMonth + 1}月${todayDate}日)`;
-
-            let current = new Date();
-            current.setDate(1);
+            let current = new Date(); current.setDate(1);
 
             function render(monthDate){
                 daysGrid.innerHTML = '';
@@ -150,125 +159,49 @@
 
                 const firstDay = new Date(year, month, 1).getDay();
                 const daysInMonth = new Date(year, month+1, 0).getDate();
-                const prevDays = new Date(year, month, 0).getDate();
+                const prevMonthLastDay = new Date(year, month, 0).getDate();
 
-                const totalCells = 42;
-
-                for(let i=0; i<totalCells; i++){
+                for(let i=0; i<42; i++){
                     const cell = document.createElement('div');
                     cell.className = 'day';
-
-                    const dayNumber = i - firstDay + 1;
-                    const dateEl = document.createElement('div');
-                    dateEl.className = 'date';
-
-                    // クリック時に飛ばす日付を正しく計算するためのDateオブジェクト
-                    let targetDate;
-
+                    let d;
                     if(i < firstDay){
-                        // 前月の日付
-                        const d = prevDays - (firstDay - 1 - i);
-                        dateEl.textContent = d;
                         cell.classList.add('other-month');
-                        targetDate = new Date(year, month - 1, d);
-                    } else if(dayNumber > daysInMonth){
-                        // 翌月の日付
-                        const d = dayNumber - daysInMonth;
-                        dateEl.textContent = d;
+                        d = prevMonthLastDay - (firstDay - i - 1);
+                    } else if(i >= firstDay + daysInMonth){
                         cell.classList.add('other-month');
-                        targetDate = new Date(year, month + 1, d);
+                        d = i - (firstDay + daysInMonth) + 1;
                     } else {
-                        // 今月の日付
-                        dateEl.textContent = dayNumber;
-                        if(year === todayYear && month === todayMonth && dayNumber === todayDate){
-                            cell.classList.add('today');
-                        }
-                        targetDate = new Date(year, month, dayNumber);
+                        d = i - firstDay + 1;
+                        const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                        if(year===today.getFullYear() && month===today.getMonth() && d===today.getDate()) cell.classList.add('today');
+                        cell.onclick = () => location.href = `/due_date/${ds}`;
                     }
-
-                    cell.appendChild(dateEl);
-
-                    // クリックイベント
-                    cell.addEventListener('click', function(){
-                        const yyyy = targetDate.getFullYear();
-                        const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
-                        const dd = String(targetDate.getDate()).padStart(2, '0');
-
-                        const selectedDate = `${yyyy}-${mm}-${dd}`;
-
-                        // 生成されたURLをコンソールで確認用
-                        console.log("Redirecting to:", `/due_date/${selectedDate}`);
-
-                        // Flaskのルーティングへ遷移
-                        window.location.href = `/due_date/${selectedDate}`;
-                    });
-
+                    cell.innerHTML = `<div class="date">${d}</div>`;
                     daysGrid.appendChild(cell);
                 }
             }
 
-            prevBtn.addEventListener('click', ()=>{ current.setMonth(current.getMonth() - 1); render(current); });
-            nextBtn.addEventListener('click', ()=>{ current.setMonth(current.getMonth() + 1); render(current); });
-
+            document.getElementById('prevBtn').onclick = () => { current.setMonth(current.getMonth()-1); render(current); };
+            document.getElementById('nextBtn').onclick = () => { current.setMonth(current.getMonth()+1); render(current); };
             render(current);
+
+            // グラフAPI取得と描画
+            fetch('/api/stats/monthly').then(r=>r.json()).then(json=>{
+                const percent = json.total === 0 ? 0 : Math.round((json.completed/json.total)*100);
+                new Chart(document.getElementById('completionChart').getContext('2d'), {
+                    type: 'doughnut',
+                    data: { datasets: [{ data: [json.completed, Math.max(0, json.total - json.completed)], backgroundColor: ['#2ecc71', '#e74c3c'], borderWidth: 0 }] },
+                    options: { cutout: '75%', plugins: { legend: { display: false } }, maintainAspectRatio: false }
+                });
+                const badge = document.createElement('div');
+                badge.className = 'chart-center-badge';
+                badge.textContent = percent + '%';
+                document.getElementById('chartContainer').appendChild(badge);
+            }).catch(() => {
+                document.getElementById('chartContainer').innerHTML = "<div class='chart-label' style='padding:40px 0;'>データ無し</div>";
+            });
         })();
-		</script>
-    
-		<!-- Chart.js CDN -->
-		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-		<script>
-			(function(){
-				const canvas = document.getElementById('completionChart');
-				if(!canvas) return;
-
-				function drawChart(completed, total){
-					const notDone = Math.max(total - completed, 0);
-					const percent = total === 0 ? 0 : Math.round((completed/total)*100);
-
-					// 描画領域をクリア
-					if(canvas._chartInstance){
-						canvas._chartInstance.destroy();
-					}
-
-					const ctx = canvas.getContext('2d');
-					canvas._chartInstance = new Chart(ctx, {
-						type: 'doughnut',
-						data: {
-							labels: ['達成', '未達成'],
-							datasets: [{ data: [completed, notDone], backgroundColor: ['#2ecc71','#e74c3c'] }]
-						},
-						options: {
-							cutout: '70%',
-							plugins: { legend: { display: false }, tooltip: { enabled: true } },
-							maintainAspectRatio: false
-						}
-					});
-
-					// 中央のテキスト表示
-					const parent = canvas.parentNode;
-					parent.style.position = 'relative';
-					let badge = parent.querySelector('.chart-center-badge');
-					if(!badge){
-						badge = document.createElement('div');
-						badge.className = 'chart-center-badge';
-						badge.style.position = 'absolute';
-						badge.style.left = '50%';
-						badge.style.top = '50%';
-						badge.style.transform = 'translate(-50%, -50%)';
-						badge.style.fontWeight = '700';
-						badge.style.color = '#222';
-						parent.appendChild(badge);
-					}
-					badge.textContent = total === 0 ? 'データ無し' : percent + '%';
-				}
-
-				fetch('/api/stats/monthly').then(r=>r.json()).then(json=>{
-					drawChart(json.completed, json.total);
-				}).catch(e=>{
-					console.error('stats fetch error', e);
-					drawChart(0,0);
-				});
-			})();
-		</script>
-	</body>
+        </script>
+    </body>
 </html>
