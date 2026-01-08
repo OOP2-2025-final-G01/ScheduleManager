@@ -54,8 +54,20 @@
 					</section>
 
 					<aside class="panel">
-						<h3>昨日のやり残し</h3>
-						<p>Dさんの追跡結果により、未完了タスクをここに注意表示します。</p>
+						{% if tasks %}
+							<ul style="padding-left: 20px; margin: 0; color: #c0392b; font-weight: bold;">
+								{% for task in tasks %}
+									<li style="margin-bottom: 8px;">
+										{{ task.task }} 
+										<span style="font-size: 0.8rem; color: #666; font-weight: normal;">
+											(期限: {{ task.due_date }})
+										</span>
+									</li>
+								{% endfor %}
+							</ul>
+						{% else %}
+							<p style="color: #27ae60; margin: 0;">🎉 やり残しはありません！</p>
+						{% endif %}
 					</aside>
 				</div>
 			</main>
