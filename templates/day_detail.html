@@ -1,142 +1,53 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-
-
-<meta charset="UTF-8">
-<script type="text/javascript" src="/eel.js"></script>
-<style>
-    /* CSSは元のまま */
-    body { font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f2f2f7; margin: 0; padding: 20px; display: flex; justify-content: center; }
-    .app-container { width: 400px; height: 600px; background-color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; position: relative; display: flex; flex-direction: column; }
-    .header { background-color: #f9f9f9; padding: 15px; text-align: center; border-bottom: 1px solid #e0e0e0; font-weight: bold; color: #333; }
-    
-    /* リスト部分をスクロール可能に */
-    .todo-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex: 1; }
-    
-    .todo-item { border-bottom: 1px solid #e5e5ea; cursor: pointer; transition: background-color 0.2s; position: relative; }
-    .todo-item input[type="radio"] { display: none; }
-    .item-content { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; width: 100%; box-sizing: border-box; }
-    .todo-item input[type="radio"]:checked + .item-content { background-color: #e3f2fd; border-left: 5px solid #007aff; }
-    .subject-name { font-size: 18px; font-weight: bold; color: #000; display: block; }
-    .target-time { font-size: 12px; color: #8e8e93; margin-top: 4px; display: block; }
-    .study-log { text-align: right; }
-    .today-label { font-size: 10px; color: #8e8e93; }
-    .current-time { font-size: 14px; font-weight: bold; color: #007aff; display: block; }
-    
-    .medal { display: none; width: 20px; height: 20px; background-color: #ffcc00; border-radius: 50%; text-align: center; line-height: 20px; font-size: 10px; color: white; margin-left: 5px; }
-    .add-button-area { padding: 15px; text-align: center; background-color: white; cursor: pointer; border-top: 1px solid #eee; }
-    .plus-icon { font-size: 30px; color: #007aff; line-height: 1; }
-
-    /* タイマーモーダルのみ維持 */
-    #timer-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.95); z-index: 10; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-    .timer-display { font-size: 60px; font-weight: bold; color: #333; margin: 20px 0; font-family: monospace; }
-    .stop-btn { background-color: #ff3b30; color: white; border: none; padding: 10px 40px; font-size: 18px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-    .modal-subject { font-size: 24px; color: #007aff; font-weight: bold; }
-</style>
-
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: sans-serif; background-color: #f2f2f7; display: flex; justify-content: center; padding: 20px; }
+        .app-container { width: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; min-height: 500px; }
+        .header { padding: 20px; text-align: center; border-bottom: 1px solid #eee; font-weight: bold; }
+        .todo-list { flex: 1; padding: 10px; }
+        .todo-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .time-badge { color: #007aff; font-weight: bold; }
+        .add-btn { padding: 20px; text-align: center; cursor: pointer; color: #007aff; font-size: 30px; border-top: 1px solid #eee; }
+        
+        /* モーダル */
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-inner { background: white; padding: 20px; border-radius: 12px; width: 300px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; border: 1px solid #ddd; border-radius: 8px; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <a href="/" style="text-decoration: none; color: #007aff;">← 戻る</a>
-        <h2>{{ due_date }} の予定</h2>
-
-
-        <div class="todo-list" id="todo-list-container">
-            </div>
-
-        <div class="add-button-area" onclick="alert('タスク追加機能は未実装です')">
-            <span class="plus-icon">＋</span>
-
+    <div class="app-container">
+        <div class="header">
+            <a href="/" style="float:left; text-decoration:none;">←</a>
+            {{ due_date }} の予定
         </div>
+
+        <div class="todo-list">
+            {% for task in todos %}
+            <div class="todo-item">
+                <span>{{ task.task }}</span>
+                <span class="time-badge">{{ task.actual_time }} 分</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="add-btn" onclick="document.getElementById('modal').style.display='flex'">＋</div>
     </div>
 
-    <script>
-
-        // --- ★追加: 起動時にDBからリストを読み込む ---
-        window.onload = async function() {
-            // Pythonの fetch_all_tasks 関数を呼び出してデータを取得
-            let tasks = await eel.fetch_all_tasks()();
-            renderTodoList(tasks);
-        };
-
-        // --- ★追加: リストを表示する関数 ---
-        function renderTodoList(tasks) {
-            const container = document.getElementById("todo-list-container");
-            container.innerHTML = ""; 
-
-            if (!tasks || tasks.length === 0) {
-                container.innerHTML = "<div style='padding:20px; text-align:center; color:#ccc;'>DBにタスクがありません</div>";
-                return;
-            }
-
-            tasks.forEach(task => {
-                // 既に保存されている時間があれば表示する処理
-                // actual_time は秒数なので、分と秒に変換して表示
-                let timeDisplay = "--分";
-                if (task.actual_time) {
-                    let m = Math.floor(task.actual_time / 60);
-                    let s = task.actual_time % 60;
-                    timeDisplay = `${m}分 ${s}秒`;
-                }
-
-                // ★ここが重要: startTimerに「task.id」を渡しています
-                const html = `
-                <label class="todo-item" onclick="startTimer(${task.id}, '${task.task}', '${task.target_time}')">
-                    <input type="radio" name="subject_select"> 
-                    <div class="item-content">
-                        <div class="left-info">
-                            <span class="subject-name">${task.task}</span>
-                            <span class="target-time">目標: ${task.target_time}分</span>
-                        </div>
-                        <div class="study-log">
-                            <span class="today-label">今日</span>
-                            <span class="current-time">
-                                <span id="time-${task.task}">${timeDisplay}</span> 
-                                <span id="medal-${task.task}" class="medal" style="display: ${task.is_completed ? 'inline-block' : 'none'};">★</span>
-                            </span>
-                        </div>
-                    </div>
-                </label>
-                `;
-                container.innerHTML += html;
-            });
-        }
-
-        // --- タイマー機能 ---
-        function startTimer(id, subject, targetMin) {
-
-            document.getElementById('timer-modal').style.display = 'flex';
-            document.getElementById('modal-subject-text').innerText = subject;
-            document.getElementById('time-display').innerText = "00:00";
-            
-            // ★変更: Pythonに ID も一緒に渡す
-            eel.start_python_timer(id, subject, targetMin);
-        }
-
-        function stopTimer() {
-            document.getElementById('timer-modal').style.display = 'none';
-            eel.stop_python_timer();
-        }
-
-        eel.expose(update_time_display);
-        function update_time_display(time_text) {
-            document.getElementById('time-display').innerText = time_text;
-        }
-
-        eel.expose(update_list_item);
-        function update_list_item(subject, resultTime, isGoalMet) {
-            let timeSpan = document.getElementById("time-" + subject);
-            if (timeSpan) timeSpan.innerText = resultTime;
-            
-            let medalSpan = document.getElementById("medal-" + subject);
-            if (isGoalMet && medalSpan) {
-                medalSpan.style.display = "inline-block";
-            }
-        }
-    </script>
-
-
-
+    <div id="modal">
+        <div class="modal-inner">
+            <form action="{{ url_for('add', due_date=due_date) }}" method="POST">
+                <h3>新規タスク</h3>
+                <input type="text" name="task_name" placeholder="内容" required>
+                <input type="number" name="actual_time" placeholder="時間(分)" required>
+                <div style="display:flex; gap:10px;">
+                    <button type="button" onclick="document.getElementById('modal').style.display='none'" style="flex:1;">閉じる</button>
+                    <button type="submit" style="flex:1; background:#007aff; color:white; border:none; border-radius:8px;">追加</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
