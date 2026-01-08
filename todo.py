@@ -8,41 +8,36 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# 1. 一覧表示（日付指定）
+
+# 1. 特定の日付のTODO一覧を表示
+
 @todo_bp.route('/date/<selected_date>')
-def index(selected_date):
+def index_by_date(selected_date):
     conn = get_db_connection()
+
+    # 渡された日付に一致するTODOを取得
     todos = conn.execute("SELECT * FROM todos WHERE date = ? ORDER BY id DESC", (selected_date,)).fetchall()
     conn.close()
-    return render_template('todo.html', todos=todos, date=selected_date)
+    return render_template('day_detail.html', todos=todos, date=selected_date)
 
-# 2. TODOの追加
+
+# 2. TODOの追加 (日付を紐付け)
 @todo_bp.route('/add/<selected_date>', methods=['POST'])
 def add(selected_date):
     task_content = request.form.get('task_name')
     if task_content and task_content.strip():
         conn = get_db_connection()
+        # dateカラムにも値を保存
         conn.execute("INSERT INTO todos (task, date) VALUES (?, ?)", (task_content, selected_date))
         conn.commit()
         conn.close()
-    return redirect(url_for('todo.index', selected_date=selected_date))
+    return redirect(url_for('todo.index_by_date', selected_date=selected_date))
 
-# 3. TODOの編集（更新）
-@todo_bp.route('/update/<int:task_id>/<selected_date>', methods=['POST'])
-def update(task_id, selected_date):
-    new_task = request.form.get('task_name')
-    if new_task and new_task.strip():
-        conn = get_db_connection()
-        conn.execute("UPDATE todos SET task = ? WHERE id = ?", (new_task, task_id))
-        conn.commit()
-        conn.close()
-    return redirect(url_for('todo.index', selected_date=selected_date))
-
-# 4. TODOの削除
+# 3. TODOの削除
 @todo_bp.route('/delete/<int:task_id>/<selected_date>', methods=['POST'])
 def delete(task_id, selected_date):
     conn = get_db_connection()
     conn.execute("DELETE FROM todos WHERE id = ?", (task_id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('todo.index', selected_date=selected_date))
+    return redirect(url_for('todo.index_by_date', selected_date=selected_date))
