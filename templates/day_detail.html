@@ -2,109 +2,38 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<script type="text/javascript" src="/eel.js"></script>
 <style>
-    /* --- CSSは変更なし --- */
-    body {
-        font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-        background-color: #f2f2f7;
-        margin: 0;
-        padding: 20px;
-        display: flex;
-        justify-content: center;
+    /* CSSはそのまま */
+    body { font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f2f2f7; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .app-container { width: 400px; background-color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
+    .header { background-color: #f9f9f9; padding: 15px; text-align: center; border-bottom: 1px solid #e0e0e0; font-weight: bold; color: #333; }
+    .todo-list { list-style: none; padding: 0; margin: 0; }
+    .todo-item { border-bottom: 1px solid #e5e5ea; cursor: pointer; transition: background-color 0.2s; position: relative; }
+    .todo-item input[type="radio"] { display: none; }
+    .item-content { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; width: 100%; box-sizing: border-box; }
+    .todo-item input[type="radio"]:checked + .item-content { background-color: #e3f2fd; border-left: 5px solid #007aff; }
+    .subject-name { font-size: 18px; font-weight: bold; color: #000; display: block; }
+    .target-time { font-size: 12px; color: #8e8e93; margin-top: 4px; display: block; }
+    .study-log { text-align: right; }
+    .today-label { font-size: 10px; color: #8e8e93; }
+    .current-time { font-size: 14px; font-weight: bold; color: #007aff; display: block; }
+    
+    /* メダル：最初は非表示(display:none)にしておき、達成したら表示する */
+    .medal { 
+        display: none; 
+        width: 20px; height: 20px; background-color: #ffcc00; border-radius: 50%; 
+        text-align: center; line-height: 20px; font-size: 10px; color: white; margin-left: 5px; 
     }
-    .app-container {
-        width: 400px;
-        background-color: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-    .header {
-        background-color: #f9f9f9;
-        padding: 15px;
-        text-align: center;
-        border-bottom: 1px solid #e0e0e0;
-        font-weight: bold;
-        color: #333;
-    }
-    .todo-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    .todo-item {
-        border-bottom: 1px solid #e5e5ea;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        position: relative;
-    }
-    .todo-item input[type="radio"] {
-        display: none;
-    }
-    .item-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 20px;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    /* 選択中の色変更（クリックした瞬間に遷移するなら、この色は一瞬しか見えませんが残しておきます） */
-    .todo-item input[type="radio"]:checked + .item-content {
-        background-color: #e3f2fd;
-        border-left: 5px solid #007aff;
-    }
-    .subject-name {
-        font-size: 18px;
-        font-weight: bold;
-        color: #000;
-        display: block;
-    }
-    .target-time {
-        font-size: 12px;
-        color: #8e8e93;
-        margin-top: 4px;
-        display: block;
-    }
-    .study-log {
-        text-align: right;
-    }
-    .today-label {
-        font-size: 10px;
-        color: #8e8e93;
-    }
-    .current-time {
-        font-size: 14px;
-        font-weight: bold;
-        color: #007aff;
-        display: block;
-    }
-    .medal {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        background-color: #ffcc00;
-        border-radius: 50%;
-        text-align: center;
-        line-height: 20px;
-        font-size: 10px;
-        color: white;
-        margin-left: 5px;
-    }
-    .add-button-area {
-        padding: 15px;
-        text-align: center;
-        background-color: white;
-        cursor: pointer;
-    }
-    .add-button-area:hover {
-        background-color: #f0f0f0;
-    }
-    .plus-icon {
-        font-size: 30px;
-        color: #007aff;
-        line-height: 1;
-    }
+
+    .add-button-area { padding: 15px; text-align: center; background-color: white; cursor: pointer; }
+    .plus-icon { font-size: 30px; color: #007aff; line-height: 1; }
+
+    /* モーダル */
+    #timer-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.95); z-index: 10; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    .timer-display { font-size: 60px; font-weight: bold; color: #333; margin: 20px 0; font-family: monospace; }
+    .stop-btn { background-color: #ff3b30; color: white; border: none; padding: 10px 40px; font-size: 18px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    .modal-subject { font-size: 24px; color: #007aff; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -112,9 +41,15 @@
     <div class="app-container">
         <div class="header">科目管理</div>
 
+        <div id="timer-modal">
+            <div class="modal-subject" id="modal-subject-text">科目名</div>
+            <div class="timer-display" id="time-display">00:00</div>
+            <button class="stop-btn" onclick="stopTimer()">STOP</button>
+        </div>
+
         <div class="todo-list">
             
-            <label class="todo-item" onclick="goToTimer('英語', '20分')">
+            <label class="todo-item" onclick="startTimer('英語', '0.2')">
                 <input type="radio" name="subject_select" checked> 
                 <div class="item-content">
                     <div class="left-info">
@@ -123,12 +58,15 @@
                     </div>
                     <div class="study-log">
                         <span class="today-label">今日</span>
-                        <span class="current-time">55分 5秒 <span class="medal">★</span></span>
+                        <span class="current-time">
+                            <span id="time-英語">--分</span> 
+                            <span id="medal-英語" class="medal">★</span>
+                        </span>
                     </div>
                 </div>
             </label>
 
-            <label class="todo-item" onclick="goToTimer('数学', '30分')">
+            <label class="todo-item" onclick="startTimer('数学', '30')">
                 <input type="radio" name="subject_select">
                 <div class="item-content">
                     <div class="left-info">
@@ -137,54 +75,64 @@
                     </div>
                     <div class="study-log">
                         <span class="today-label">今日</span>
-                        <span class="current-time">5分</span>
-                    </div>
-                </div>
-            </label>
-
-            <label class="todo-item" onclick="goToTimer('デッサン', '60分')">
-                <input type="radio" name="subject_select">
-                <div class="item-content">
-                    <div class="left-info">
-                        <span class="subject-name">デッサン</span>
-                        <span class="target-time">目標: 60分</span>
-                    </div>
-                    <div class="study-log">
-                        <span class="today-label">今日</span>
-                        <span class="current-time">--分</span>
+                        <span class="current-time">
+                            <span id="time-数学">--分</span> 
+                            <span id="medal-数学" class="medal">★</span>
+                        </span>
                     </div>
                 </div>
             </label>
 
         </div>
 
-        <div class="add-button-area" onclick="openAddScreen()">
+        <div class="add-button-area">
             <span class="plus-icon">＋</span>
         </div>
-
     </div>
 
     <script>
-        /**
-         * TODOをクリックしたときに呼ばれる関数
-         * @param {string} subject - 科目名
-         * @param {string} target - 目標時間
-         */
-        function goToTimer(subject, target) {
-            // ここでPython側に「画面を切り替えて！」と命令を送ることになります。
-            // 今はアラートでシミュレーションします。
-            alert("【画面遷移】\n「" + subject + "」のタイマーを開始します。\n目標時間は " + target + " です。");
-            
-            // 将来的なPython(Eelなど)との連携イメージ:
-            // eel.start_timer(subject); 
-            // window.location.href = 'timer.html';
+        // --- 1. 開始処理 ---
+        function startTimer(subject, targetMin) {
+            // モーダルを表示
+            document.getElementById('timer-modal').style.display = 'flex';
+            document.getElementById('modal-subject-text').innerText = subject;
+            document.getElementById('time-display').innerText = "00:00";
+
+            // ★目標時間(数字)もPythonへ渡す
+            eel.start_python_timer(subject, targetMin);
         }
 
-        /**
-         * 追加ボタンを押したときの関数
-         */
-        function openAddScreen() {
-            alert("【画面遷移】\n新しいTODOを追加する画面へ移動します。");
+        // --- 2. 停止処理 ---
+        function stopTimer() {
+            document.getElementById('timer-modal').style.display = 'none';
+            eel.stop_python_timer();
+        }
+
+        // --- 3. Pythonからの通知を受け取る関数たち ---
+
+        // タイマー計測中の表示更新
+        eel.expose(update_time_display);
+        function update_time_display(time_text) {
+            document.getElementById('time-display').innerText = time_text;
+        }
+
+        // ★新規追加: 完了時にリストを更新する関数
+        eel.expose(update_list_item);
+        function update_list_item(subject, resultTime, isGoalMet) {
+            // 1. 時間を書き換える
+            // ID名を作成: 例 "time-英語"
+            let timeSpan = document.getElementById("time-" + subject);
+            if (timeSpan) {
+                timeSpan.innerText = resultTime;
+            }
+
+            // 2. メダルを表示するか判定
+            if (isGoalMet) {
+                let medalSpan = document.getElementById("medal-" + subject);
+                if (medalSpan) {
+                    medalSpan.style.display = "inline-block"; // 表示する
+                }
+            }
         }
     </script>
 
