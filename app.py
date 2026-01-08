@@ -11,6 +11,9 @@ ScheduleManager - minimal Flask runner
 
 from flask import Flask, render_template
 import os
+import sqlite3
+from flask import jsonify
+from datetime import date
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
@@ -19,6 +22,52 @@ app = Flask(__name__, template_folder='templates', static_folder='static')
 def index():
 	# 単純に templates/index.html を返す
 	return render_template('index.html')
+
+
+@app.route('/api/stats/monthly')
+def api_monthly_stats():
+	"""今月の予定に対する達成数と合計数を返す。
+	レスポンス: { "completed": X, "total": Y }
+	条件: todos.due_date が当月に該当する行を集計する（YYYY-MM-DD）
+	"""
+	# 今月の最初と最後の日を計算
+	today = date.today()
+	first_day = today.replace(day=1)
+	# 次の月の1日から1日戻して今月の最終日を作る
+	if today.month == 12:
+		next_month = today.replace(year=today.year+1, month=1, day=1)
+	else:
+		next_month = today.replace(month=today.month+1, day=1)
+	last_day = next_month - (date.resolution)
+
+	start_str = first_day.isoformat()
+	end_str = last_day.isoformat()
+
+	try:
+		conn = sqlite3.connect('main.db')
+		cur = conn.cursor()
+		# due_date が NULL のエントリは集計対象外
+		cur.execute("""
+			SELECT
+				SUM(CASE WHEN is_completed=1 THEN 1 ELSE 0 END) as completed,
+				COUNT(*) as total
+			FROM todos
+			WHERE due_date IS NOT NULL
+			  AND due_date >= ?
+			  AND due_date <= ?
+		""", (start_str, end_str))
+		row = cur.fetchone()
+		conn.close()
+
+		completed = int(row[0] or 0)
+		total = int(row[1] or 0)
+	except Exception as exc:
+		# DB ファイルやテーブルがない場合などは 0/0 を返す
+		print('DB error in /api/stats/monthly:', exc)
+		completed = 0
+		total = 0
+
+	return jsonify({"completed": completed, "total": total})
 
 
 @app.route('/stats')
