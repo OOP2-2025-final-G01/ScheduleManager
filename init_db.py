@@ -17,6 +17,7 @@ def init_database():
             task TEXT NOT NULL,
             due_date TEXT,
             duration TEXT,
+            actual_time INTEGER,
             is_completed INTEGER DEFAULT 0
         )
     """)
