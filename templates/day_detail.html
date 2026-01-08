@@ -2,19 +2,39 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ date }} のTODOリスト</title>
     <style>
-        /* 既存のCSSはそのまま使用 */
         body { font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f2f2f7; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .app-container { width: 400px; background-color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
+        .app-container { width: 400px; background-color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; position: relative; margin-bottom: 20px; }
         .header { background-color: #f9f9f9; padding: 15px; text-align: center; border-bottom: 1px solid #e0e0e0; font-weight: bold; color: #333; }
+        .back-link { margin-bottom: 15px; text-decoration: none; color: #007aff; font-size: 14px; }
+        
+        /* TODOリストのスタイル */
         .todo-list { list-style: none; padding: 0; margin: 0; }
         .todo-item { border-bottom: 1px solid #e5e5ea; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
-        .subject-name { font-size: 18px; font-weight: bold; color: #000; }
+        .subject-info { flex-grow: 1; }
+        .subject-name { font-size: 18px; font-weight: bold; color: #000; display: block; }
         
-        .delete-btn { background-color: #ff3b30; color: white; border: none; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
-        .add-form { padding: 15px; border-top: 1px solid #e0e0e0; display: flex; gap: 10px; }
-        .add-input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
-        .back-link { margin-bottom: 10px; text-decoration: none; color: #007aff; }
+        /* タイマー・ボタン周り */
+        .controls { display: flex; gap: 10px; }
+        .btn { border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 14px; }
+        .btn-start { background-color: #34c759; color: white; }
+        .btn-delete { background-color: #ff3b30; color: white; }
+        .btn-add { background-color: #007aff; color: white; width: 100%; padding: 12px; border-radius: 0; }
+
+        /* 入力フォーム */
+        .add-form { padding: 15px; border-top: 1px solid #e5e5ea; }
+        .input-task { width: 70%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+
+        /* タイマーモーダル */
+        #timer-modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background-color: rgba(255, 255, 255, 0.95); z-index: 100; 
+            flex-direction: column; justify-content: center; align-items: center; 
+        }
+        .timer-display { font-size: 64px; font-weight: bold; margin: 20px 0; font-family: monospace; }
+        .stop-btn { background-color: #ff3b30; color: white; border: none; padding: 15px 50px; font-size: 20px; border-radius: 30px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -22,26 +42,72 @@
     <a href="/" class="back-link">← カレンダーに戻る</a>
 
     <div class="app-container">
-        <div class="header">{{ date }} の予定</div>
+        <div class="header">{{ date }} の予定管理</div>
 
-        <div class="todo-list">
-            {% for todo in todos %}
-            <div class="todo-item">
-                <div class="left-info">
-                    <span class="subject-name">{{ todo.task }}</span>
-                </div>
-                <form action="{{ url_for('todo.delete', task_id=todo.id, selected_date=date) }}" method="POST">
-                    <button type="submit" class="delete-btn" onclick="return confirm('削除しますか？')">削除</button>
-                </form>
-            </div>
-            {% endfor %}
+        <div id="timer-modal">
+            <h2 id="modal-subject-name" style="color: #007aff;">科目名</h2>
+            <div class="timer-display" id="display-time">00:00</div>
+            <button class="stop-btn" onclick="stopTimer()">計測終了</button>
         </div>
 
-        <form class="add-form" action="{{ url_for('todo.add', selected_date=date) }}" method="POST">
-            <input type="text" name="task_name" class="add-input" placeholder="新しい予定を追加" required>
-            <button type="submit" style="background: none; border: none; font-size: 24px; color: #007aff; cursor: pointer;">＋</button>
-        </form>
+        <ul class="todo-list">
+            {% for todo in todos %}
+            <li class="todo-item">
+                <div class="subject-info">
+                    <span class="subject-name">{{ todo.task }}</span>
+                </div>
+                <div class="controls">
+                    <button class="btn btn-start" onclick="startTimer('{{ todo.task }}')">開始</button>
+                    
+                    <form action="{{ url_for('todo.delete', task_id=todo.id, selected_date=date) }}" method="POST" style="margin:0;">
+                        <button type="submit" class="btn btn-delete" onclick="return confirm('削除しますか？')">削除</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <div class="add-form">
+            <form action="{{ url_for('todo.add', selected_date=date) }}" method="POST">
+                <input type="text" name="task_name" class="input-task" placeholder="新しい科目名..." required>
+                <button type="submit" class="btn btn-add" style="width: auto; border-radius: 4px;">追加</button>
+            </form>
+        </div>
     </div>
 
+    <script>
+        let startTime;
+        let timerInterval;
+        let currentSubject = "";
+
+        function startTimer(subject) {
+            currentSubject = subject;
+            document.getElementById('modal-subject-name').innerText = subject;
+            document.getElementById('timer-modal').style.display = 'flex';
+            
+            startTime = Date.now();
+            timerInterval = setInterval(updateDisplay, 1000);
+        }
+
+        function updateDisplay() {
+            const now = Date.now();
+            const diff = Math.floor((now - startTime) / 1000);
+            const mins = Math.floor(diff / 60).toString().padStart(2, '0');
+            const secs = (diff % 60).toString().padStart(2, '0');
+            document.getElementById('display-time').innerText = `${mins}:${secs}`;
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            document.getElementById('timer-modal').style.display = 'none';
+            
+            const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+            const totalMinutes = Math.floor(totalSeconds / 60);
+            
+            alert(`${currentSubject}を ${totalMinutes} 分間勉強しました！`);
+            
+            // 必要であれば、ここで fetch() を使って Flask サーバーに学習時間を保存するリクエストを送ることができます。
+        }
+    </script>
 </body>
 </html>
