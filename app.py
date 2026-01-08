@@ -2,6 +2,10 @@ from flask import Flask, render_template, request, redirect, url_for
 import os
 import sqlite3
 
+from flask import jsonify
+from datetime import date
+
+
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
 # データベース接続
@@ -12,6 +16,7 @@ def get_db_connection():
 
 @app.route('/')
 def index():
+
     return render_template('index.html')
 
 # ★ここが重要：カレンダーから飛んでくる先
@@ -43,6 +48,7 @@ def delete(task_id, due_date):
     conn.commit()
     conn.close()
     return redirect(url_for('day_detail', due_date=due_date))
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
