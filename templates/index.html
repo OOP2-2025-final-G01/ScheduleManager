@@ -78,72 +78,93 @@
 		</div>
 
 		<script>
-			(function(){
-				const titleEl = document.getElementById('calTitle');
-				const daysGrid = document.getElementById('daysGrid');
-				const prevBtn = document.getElementById('prevBtn');
-				const nextBtn = document.getElementById('nextBtn');
-				const todayTitleEl = document.getElementById('todayTitle');
+        (function(){
+            const titleEl = document.getElementById('calTitle');
+            const daysGrid = document.getElementById('daysGrid');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const todayTitleEl = document.getElementById('todayTitle');
 
-				const today = new Date();
-				const todayYear = today.getFullYear();
-				const todayMonth = today.getMonth();
-				const todayDate = today.getDate();
+            const today = new Date();
+            const todayYear = today.getFullYear();
+            const todayMonth = today.getMonth();
+            const todayDate = today.getDate();
 
-				todayTitleEl.textContent = `今日の予定 (${todayMonth + 1}月${todayDate}日)`;
+            todayTitleEl.textContent = `今日の予定 (${todayMonth + 1}月${todayDate}日)`;
 
-				let current = new Date();
-				current.setDate(1);
+            let current = new Date();
+            current.setDate(1);
 
-				function render(monthDate){
-					daysGrid.innerHTML = '';
-					const year = monthDate.getFullYear();
-					const month = monthDate.getMonth();
-					titleEl.textContent = `${year}年 ${month+1}月`;
+            function render(monthDate){
+                daysGrid.innerHTML = '';
+                const year = monthDate.getFullYear();
+                const month = monthDate.getMonth();
+                titleEl.textContent = `${year}年 ${month+1}月`;
 
-					const firstDay = new Date(year, month, 1).getDay();
-					const daysInMonth = new Date(year, month+1, 0).getDate();
-					const prevDays = new Date(year, month, 0).getDate();
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month+1, 0).getDate();
+                const prevDays = new Date(year, month, 0).getDate();
 
-					const totalCells = 42;
+                const totalCells = 42;
 
-					for(let i=0;i<totalCells;i++){
-						const cell = document.createElement('div');
-						cell.className = 'day';
+                for(let i=0; i<totalCells; i++){
+                    const cell = document.createElement('div');
+                    cell.className = 'day';
 
-						const dayNumber = i - firstDay + 1;
-						const dateEl = document.createElement('div');
-						dateEl.className = 'date';
+                    const dayNumber = i - firstDay + 1;
+                    const dateEl = document.createElement('div');
+                    dateEl.className = 'date';
 
-						if(i < firstDay){
-							const d = prevDays - (firstDay - 1 - i);
-							dateEl.textContent = d;
-							cell.classList.add('other-month');
-						} else if(dayNumber > daysInMonth){
-							dateEl.textContent = dayNumber - daysInMonth;
-							cell.classList.add('other-month');
-						} else {
-							dateEl.textContent = dayNumber;
-							if(year === todayYear && month === todayMonth && dayNumber === todayDate){
-								cell.classList.add('today');
-							}
-						}
+                    // クリック時に飛ばす日付を正しく計算するためのDateオブジェクト
+                    let targetDate;
 
-						cell.appendChild(dateEl);
-						cell.addEventListener('click', function(){
-							const d = new Date(year, month, Math.min(Math.max(dayNumber,1),daysInMonth));
-							alert(`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()} を選択しました`);
-						});
+                    if(i < firstDay){
+                        // 前月の日付
+                        const d = prevDays - (firstDay - 1 - i);
+                        dateEl.textContent = d;
+                        cell.classList.add('other-month');
+                        targetDate = new Date(year, month - 1, d);
+                    } else if(dayNumber > daysInMonth){
+                        // 翌月の日付
+                        const d = dayNumber - daysInMonth;
+                        dateEl.textContent = d;
+                        cell.classList.add('other-month');
+                        targetDate = new Date(year, month + 1, d);
+                    } else {
+                        // 今月の日付
+                        dateEl.textContent = dayNumber;
+                        if(year === todayYear && month === todayMonth && dayNumber === todayDate){
+                            cell.classList.add('today');
+                        }
+                        targetDate = new Date(year, month, dayNumber);
+                    }
 
-						daysGrid.appendChild(cell);
-					}
-				}
+                    cell.appendChild(dateEl);
 
-				prevBtn.addEventListener('click', ()=>{ current.setMonth(current.getMonth() - 1); render(current); });
-				nextBtn.addEventListener('click', ()=>{ current.setMonth(current.getMonth() + 1); render(current); });
+                    // クリックイベント
+                    cell.addEventListener('click', function(){
+                        const yyyy = targetDate.getFullYear();
+                        const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+                        const dd = String(targetDate.getDate()).padStart(2, '0');
 
-				render(current);
-			})();
+                        const selectedDate = `${yyyy}-${mm}-${dd}`;
+
+                        // 生成されたURLをコンソールで確認用
+                        console.log("Redirecting to:", `/due_date/${selectedDate}`);
+
+                        // Flaskのルーティングへ遷移
+                        window.location.href = `/due_date/${selectedDate}`;
+                    });
+
+                    daysGrid.appendChild(cell);
+                }
+            }
+
+            prevBtn.addEventListener('click', ()=>{ current.setMonth(current.getMonth() - 1); render(current); });
+            nextBtn.addEventListener('click', ()=>{ current.setMonth(current.getMonth() + 1); render(current); });
+
+            render(current);
+        })();
 		</script>
 	</body>
 </html>

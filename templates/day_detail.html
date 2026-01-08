@@ -1,144 +1,38 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-
-<meta charset="UTF-8">
-<script type="text/javascript" src="/eel.js"></script>
-<style>
-    /* CSSはそのまま */
-    body { font-family: "Helvetica Neue", Arial, sans-serif; background-color: #f2f2f7; margin: 0; padding: 20px; display: flex; justify-content: center; }
-    .app-container { width: 400px; background-color: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; position: relative; }
-    .header { background-color: #f9f9f9; padding: 15px; text-align: center; border-bottom: 1px solid #e0e0e0; font-weight: bold; color: #333; }
-    .todo-list { list-style: none; padding: 0; margin: 0; }
-    .todo-item { border-bottom: 1px solid #e5e5ea; cursor: pointer; transition: background-color 0.2s; position: relative; }
-    .todo-item input[type="radio"] { display: none; }
-    .item-content { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; width: 100%; box-sizing: border-box; }
-    .todo-item input[type="radio"]:checked + .item-content { background-color: #e3f2fd; border-left: 5px solid #007aff; }
-    .subject-name { font-size: 18px; font-weight: bold; color: #000; display: block; }
-    .target-time { font-size: 12px; color: #8e8e93; margin-top: 4px; display: block; }
-    .study-log { text-align: right; }
-    .today-label { font-size: 10px; color: #8e8e93; }
-    .current-time { font-size: 14px; font-weight: bold; color: #007aff; display: block; }
-    
-    /* メダル：最初は非表示(display:none)にしておき、達成したら表示する */
-    .medal { 
-        display: none; 
-        width: 20px; height: 20px; background-color: #ffcc00; border-radius: 50%; 
-        text-align: center; line-height: 20px; font-size: 10px; color: white; margin-left: 5px; 
-    }
-
-    .add-button-area { padding: 15px; text-align: center; background-color: white; cursor: pointer; }
-    .plus-icon { font-size: 30px; color: #007aff; line-height: 1; }
-
-    /* モーダル */
-    #timer-modal { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.95); z-index: 10; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-    .timer-display { font-size: 60px; font-weight: bold; color: #333; margin: 20px 0; font-family: monospace; }
-    .stop-btn { background-color: #ff3b30; color: white; border: none; padding: 10px 40px; font-size: 18px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-    .modal-subject { font-size: 24px; color: #007aff; font-weight: bold; }
-</style>
+    <meta charset="UTF-8">
+    <title>{{ date }} の予定</title>
+    <style>
+        /* デザインは既存のものを継承 */
+        body { font-family: sans-serif; background-color: #f2f2f7; padding: 20px; }
+        .container { max-width: 400px; margin: 0 auto; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .todo-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0; }
+        .delete-btn { color: #ff3b30; border: none; background: none; cursor: pointer; }
+        .add-form { margin-top: 20px; display: flex; gap: 10px; }
+        .add-input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+    </style>
 </head>
 <body>
-
-    <div class="app-container">
-        <div class="header">科目管理</div>
-
-        <div id="timer-modal">
-            <div class="modal-subject" id="modal-subject-text">科目名</div>
-            <div class="timer-display" id="time-display">00:00</div>
-            <button class="stop-btn" onclick="stopTimer()">STOP</button>
-        </div>
+    <div class="container">
+        <a href="/" style="text-decoration: none; color: #007aff;">← 戻る</a>
+        <h2>{{ due_date }} の予定</h2>
 
         <div class="todo-list">
-            
-            <label class="todo-item" onclick="startTimer('英語', '0.2')">
-                <input type="radio" name="subject_select" checked> 
-                <div class="item-content">
-                    <div class="left-info">
-                        <span class="subject-name">英語</span>
-                        <span class="target-time">目標: 20分</span>
-                    </div>
-                    <div class="study-log">
-                        <span class="today-label">今日</span>
-                        <span class="current-time">
-                            <span id="time-英語">--分</span> 
-                            <span id="medal-英語" class="medal">★</span>
-                        </span>
-                    </div>
-                </div>
-            </label>
-
-            <label class="todo-item" onclick="startTimer('数学', '30')">
-                <input type="radio" name="subject_select">
-                <div class="item-content">
-                    <div class="left-info">
-                        <span class="subject-name">数学</span>
-                        <span class="target-time">目標: 30分</span>
-                    </div>
-                    <div class="study-log">
-                        <span class="today-label">今日</span>
-                        <span class="current-time">
-                            <span id="time-数学">--分</span> 
-                            <span id="medal-数学" class="medal">★</span>
-                        </span>
-                    </div>
-                </div>
-            </label>
-
+            {% for todo in todos %}
+            <div class="todo-item">
+                <span>{{ todo.task }}</span>
+                <form action="{{ url_for('delete', task_id=todo.id, due_date=due_date) }}" method="POST">
+                    <button type="submit" class="delete-btn">削除</button>
+                </form>
+            </div>
+            {% endfor %}
         </div>
 
-        <div class="add-button-area">
-            <span class="plus-icon">＋</span>
-
-        </div>
+        <form class="add-form" action="{{ url_for('add', due_date=due_date) }}" method="POST">
+            <input type="text" name="task_name" class="add-input" placeholder="新しい予定を入力" required>
+            <button type="submit" style="background-color: #007aff; color: white; border: none; border-radius: 6px; padding: 8px 15px;">追加</button>
+        </form>
     </div>
-
-    <script>
-
-        // --- 1. 開始処理 ---
-        function startTimer(subject, targetMin) {
-            // モーダルを表示
-            document.getElementById('timer-modal').style.display = 'flex';
-            document.getElementById('modal-subject-text').innerText = subject;
-            document.getElementById('time-display').innerText = "00:00";
-
-            // ★目標時間(数字)もPythonへ渡す
-            eel.start_python_timer(subject, targetMin);
-        }
-
-        // --- 2. 停止処理 ---
-        function stopTimer() {
-            document.getElementById('timer-modal').style.display = 'none';
-            eel.stop_python_timer();
-        }
-
-        // --- 3. Pythonからの通知を受け取る関数たち ---
-
-        // タイマー計測中の表示更新
-        eel.expose(update_time_display);
-        function update_time_display(time_text) {
-            document.getElementById('time-display').innerText = time_text;
-        }
-
-        // ★新規追加: 完了時にリストを更新する関数
-        eel.expose(update_list_item);
-        function update_list_item(subject, resultTime, isGoalMet) {
-            // 1. 時間を書き換える
-            // ID名を作成: 例 "time-英語"
-            let timeSpan = document.getElementById("time-" + subject);
-            if (timeSpan) {
-                timeSpan.innerText = resultTime;
-            }
-
-            // 2. メダルを表示するか判定
-            if (isGoalMet) {
-                let medalSpan = document.getElementById("medal-" + subject);
-                if (medalSpan) {
-                    medalSpan.style.display = "inline-block"; // 表示する
-                }
-            }
-        }
-    </script>
-
-
 </body>
 </html>
