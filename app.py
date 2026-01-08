@@ -2,13 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for
 import os
 import sqlite3
 
-from flask import jsonify
-from datetime import date
+app = Flask(__name__)
 
-
-app = Flask(__name__, template_folder='templates', static_folder='static')
-
-# データベース接続
 def get_db_connection():
     conn = sqlite3.connect("main.db")
     conn.row_factory = sqlite3.Row
@@ -16,40 +11,29 @@ def get_db_connection():
 
 @app.route('/')
 def index():
-
     return render_template('index.html')
 
-# ★ここが重要：カレンダーから飛んでくる先
 @app.route('/due_date/<due_date>')
 def day_detail(due_date):
     conn = get_db_connection()
-    # 指定された日付のTODOのみを取得
+    # actual_time を含む全データを取得
     todos = conn.execute("SELECT * FROM todos WHERE due_date = ? ORDER BY id DESC", (due_date,)).fetchall()
     conn.close()
-    # day_detail.html を表示し、日付とTODOリストを渡す
     return render_template('day_detail.html', due_date=due_date, todos=todos)
 
-# TODOの追加
 @app.route('/add/<due_date>', methods=['POST'])
 def add(due_date):
     task_content = request.form.get('task_name')
+    # フォームから送られた時間を actual_time として保存
+    time_val = request.form.get('actual_time', 0)
+    
     if task_content and task_content.strip():
         conn = get_db_connection()
-        conn.execute("INSERT INTO todos (task, due_date) VALUES (?, ?)", (task_content, due_date))
+        conn.execute("INSERT INTO todos (task, due_date, actual_time) VALUES (?, ?, ?)", 
+                     (task_content, due_date, time_val))
         conn.commit()
         conn.close()
     return redirect(url_for('day_detail', due_date=due_date))
 
-# TODOの削除
-@app.route('/delete/<int:task_id>/<due_date>', methods=['POST'])
-def delete(task_id, due_date):
-    conn = get_db_connection()
-    conn.execute("DELETE FROM todos WHERE id = ?", (task_id,))
-    conn.commit()
-    conn.close()
-    return redirect(url_for('day_detail', due_date=due_date))
-
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5001))
-    app.run(host='0.0.0.0', port=port, debug=True)
+if __name__ == "__main__":
+    app.run(port=5001, debug=True)
