@@ -102,4 +102,4 @@ threading.Thread(target=run_flask, daemon=True).start()
 print("アプリを起動します...")
 # 少し待ってからEelでFlaskのURLを開く
 time.sleep(1) 
-eel.start('http://localhost:5000', size=(450, 700))
+eel.start('http://localhost:5000', size=(450, 700),port=8000)
