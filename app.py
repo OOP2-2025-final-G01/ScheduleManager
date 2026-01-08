@@ -16,23 +16,26 @@ def index():
 @app.route('/due_date/<due_date>')
 def day_detail(due_date):
     conn = get_db_connection()
-    # actual_time を含む全データを取得
+    # データを取得
     todos = conn.execute("SELECT * FROM todos WHERE due_date = ? ORDER BY id DESC", (due_date,)).fetchall()
     conn.close()
     return render_template('day_detail.html', due_date=due_date, todos=todos)
 
+# ★ここが重要: フォームの修正に合わせて受け取り側も整備
 @app.route('/add/<due_date>', methods=['POST'])
 def add(due_date):
     task_content = request.form.get('task_name')
-    # フォームから送られた時間を actual_time として保存
-    time_val = request.form.get('actual_time', 0)
-    
+    duration = request.form.get('duration') # HTMLの input name="duration" を受け取る
+
     if task_content and task_content.strip():
         conn = get_db_connection()
-        conn.execute("INSERT INTO todos (task, due_date, actual_time) VALUES (?, ?, ?)", 
-                     (task_content, due_date, time_val))
+        # duration (目標時間) を保存し、actual_time (実績) は 0 で初期化
+        conn.execute("INSERT INTO todos (task, due_date, duration, actual_time, is_completed) VALUES (?, ?, ?, 0, 0)", 
+                     (task_content, due_date, duration))
         conn.commit()
         conn.close()
+        
+    # day_detail 関数へリダイレクト（変数は due_date）
     return redirect(url_for('day_detail', due_date=due_date))
 
 if __name__ == "__main__":
