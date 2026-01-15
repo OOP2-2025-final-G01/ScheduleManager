@@ -15,6 +15,9 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import os
 import sqlite3
 from datetime import date
+import eel        # 追加：タイマー用
+import threading
+import todoCheck  # これを追加！
 
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -25,10 +28,29 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+@app.route('/eel.js')
+def eel_js():
+    """フロントエンドからEelのライブラリを呼び出すための転送設定"""
+    return redirect('http://localhost:8000/eel.js')
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # 今日の日付を取得 (YYYY-MM-DD)
+    today_str = date.today().strftime('%Y-%m-%d')
+    
+    conn = get_db_connection()
+    # 今日の日付に一致するタスクを取得
+    today_tasks = conn.execute(
+        "SELECT task, duration FROM todos WHERE due_date = ?", 
+        (today_str,)
+    ).fetchall()
+    conn.close()
+    
+    overdue_tasks, today_str = todoCheck.get_incomplete_tasks()
+    # 取得したリストを「tasks」という名前で index.html へ送る
+    
+    # 取得したデータを index.html へ渡す
+    return render_template('index.html', today_tasks=today_tasks, tasks=overdue_tasks)
 
 
 @app.route('/api/stats/monthly')
@@ -152,5 +174,12 @@ def page_not_found(e):
 
 
 if __name__ == '__main__':
+    
+
+    # B. タイマー(Eel)サーバーを別スレッドで起動
+    # これにより Flask と Eel が並列して動作可能になる
+    import timer 
+    eel_thread = threading.Thread(target=timer.run_eel_server, daemon=True)
+    eel_thread.start()
     port = int(os.environ.get('PORT', 5001))
     app.run(host='0.0.0.0', port=port, debug=True)
