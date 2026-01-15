@@ -3,14 +3,23 @@ import time
 import threading
 import sqlite3
 import os
-from flask import Flask, redirect
-from todo import todo_bp # todo.pyを読み込み
+from flask import Flask, redirect, Response
+from todo import todo_bp 
 
 # 1. Flaskアプリの設定
 app = Flask(__name__)
+# Blueprintを登録 (これで url_for('todo.add') が使えるようになります)
 app.register_blueprint(todo_bp)
 
-# ルートにアクセスしたら今日の日付へ飛ばす（簡易対応）
+# ★重要: ブラウザが eel.js を読み込めるようにする魔法のコード
+@app.route('/eel.js')
+def eel_js():
+    eel_js_path = os.path.join(os.path.dirname(eel.__file__), 'eel.js')
+    with open(eel_js_path, encoding='utf-8') as f:
+        js_content = f.read()
+    return Response(js_content, mimetype='application/javascript')
+
+# 起動時に今日の日付へ転送
 @app.route('/')
 def index():
     import datetime
@@ -18,12 +27,11 @@ def index():
     return redirect(f'/date/{today}')
 
 # 2. Eelの設定
-# FlaskのtemplatesフォルダをEelも見れるように設定
 base_path = os.path.dirname(os.path.abspath(__file__))
 template_dir = os.path.join(base_path, 'templates')
 eel.init(template_dir) 
 
-# --- タイマーロジック (Eel) ---
+# --- タイマーロジック ---
 is_running = False
 current_task_id = None
 start_time = 0
@@ -52,7 +60,7 @@ def run_timer_loop():
         elapsed = int(time.time() - start_time)
         m = elapsed // 60
         s = elapsed % 60
-        eel.update_timer_modal(f"{m:02}:{s:02}") # JS更新
+        eel.update_timer_modal(f"{m:02}:{s:02}")
         time.sleep(0.1)
 
 @eel.expose
@@ -68,13 +76,11 @@ def stop_python_timer():
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        # 累積時間を計算して更新
         row = cursor.execute("SELECT actual_time, duration FROM todos WHERE id = ?", (current_task_id,)).fetchone()
         
         current_total = row["actual_time"] if row["actual_time"] else 0
         new_total = current_total + session_seconds
         
-        # 目標達成チェック
         try:
             target_sec = int(row["duration"]) * 60
         except:
@@ -88,18 +94,17 @@ def stop_python_timer():
         conn.close()
         print(f"保存完了: +{session_seconds}秒 (合計{new_total}秒)")
 
-    # ★Flaskで再描画するためにページをリロードさせる
+    # 画面リロード
     eel.reload_page()
 
 # --- 起動処理 ---
 def run_flask():
-    # Flaskをポート5000で動かす
+    # Flaskはポート5000で動かす
     app.run(port=5000, debug=False, use_reloader=False)
 
-# Flaskを別スレッドで起動
 threading.Thread(target=run_flask, daemon=True).start()
 
 print("アプリを起動します...")
-# 少し待ってからEelでFlaskのURLを開く
 time.sleep(1) 
-eel.start('http://localhost:5000', size=(450, 700),port=8000)
+# Eelはポート8000で、Flask(5000)を見に行く
+eel.start('http://localhost:5000', size=(450, 700), port=8000)
