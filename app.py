@@ -161,7 +161,7 @@ def page_not_found(e):
 
 if __name__ == '__main__':
     # 1. データベースがなければテーブルを作る（重要！）
-    init_db() 
+    init_db()
     
     # 2. ポート番号の設定（mainの書き方を採用）
     port = int(os.environ.get('PORT', 5001))
