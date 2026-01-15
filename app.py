@@ -30,6 +30,24 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+# --- データベースの初期化 ---
+def init_db():
+    """データベースファイルとテーブルがなければ自動で作成する"""
+    conn = get_db_connection()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS todos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task TEXT NOT NULL,
+            due_date TEXT,
+            duration INTEGER,
+            actual_time INTEGER DEFAULT 0,
+            is_completed INTEGER DEFAULT 0
+        )
+    ''')
+    conn.commit()
+    conn.close()
+    print("データベースの初期化が完了しました。")
+
 @app.route('/eel.js')
 def eel_js():
     """フロントエンドからEelのライブラリを呼び出すための転送設定"""
@@ -160,7 +178,7 @@ def day_detail(due_date):
 def add(due_date):
     task_content = request.form.get('task_name')
 
-    time_val = request.form.get('actual_time', 0)
+    duration = request.form.get('actual_time', 0)
 
     if task_content and task_content.strip():
         conn = get_db_connection()
