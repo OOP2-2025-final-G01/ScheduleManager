@@ -77,7 +77,18 @@
 				<div class="top-grid">
 					<section class="panel">
 						<h2 id="todayTitle">今日の予定</h2>
-						<p>ここに Bさん（TODO）から渡された今日の予定が表示されます。（例：英語 30分）</p>
+						<div style="display: flex; flex-wrap: wrap; gap: 20px; font-size: 1rem; color: #333;">
+							{% if today_tasks %}
+								{% for task in today_tasks %}
+									<span>
+										<strong>{{ task.task }}</strong> 
+										{% if task.duration %}{{ task.duration }}分{% endif %}
+									</span>
+								{% endfor %}
+							{% else %}
+								<p style="color: #888; margin: 0;">今日の予定はありません。</p>
+							{% endif %}
+						</div>
 					</section>
 
 

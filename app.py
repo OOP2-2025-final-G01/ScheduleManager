@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 import os
 import sqlite3
 import eel  # ★追加: eelの場所を知るために必要
+from datetime import date
 
 app = Flask(__name__)
 
@@ -22,7 +23,19 @@ def eel_js():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # 今日の日付を取得 (YYYY-MM-DD)
+    today_str = date.today().strftime('%Y-%m-%d')
+    
+    conn = get_db_connection()
+    # 今日の日付に一致するタスクを取得
+    today_tasks = conn.execute(
+        "SELECT task, duration FROM todos WHERE due_date = ?", 
+        (today_str,)
+    ).fetchall()
+    conn.close()
+    
+    # 取得したデータを index.html へ渡す
+    return render_template('index.html', today_tasks=today_tasks)
 
 @app.route('/due_date/<due_date>')
 def day_detail(due_date):
