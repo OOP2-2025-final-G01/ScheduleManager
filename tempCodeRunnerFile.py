@@ -1,22 +1,24 @@
 from flask import Flask, render_template, request, redirect, url_for
 import os
 import sqlite3
-import eel 
-import threading
+import eel  # ★追加: eelの場所を知るために必要
 
 app = Flask(__name__)
 
 def get_db_connection():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    db_path = os.path.join(base_dir, "main.db")
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect("main.db")
     conn.row_factory = sqlite3.Row
     return conn
 
-# eel.js へのアクセスが来たら、Eelサーバー(8000番)へ転送する
+# ★追加: これがないとブラウザが「eel.jsがない！」とエラーを出します
 @app.route('/eel.js')
 def eel_js():
-    return redirect('http://localhost:8000/eel.js')
+    # eelライブラリの中から eel.js ファイルを探して読み込む
+    eel_js_path = os.path.join(os.path.dirname(eel.__file__), 'eel.js')
+    with open(eel_js_path, encoding='utf-8') as f:
+        js_content = f.read()
+    # ブラウザに返す
+    return js_content, 200, {'Content-Type': 'application/javascript'}
 
 @app.route('/')
 def index():
@@ -43,18 +45,5 @@ def add(due_date):
         
     return redirect(url_for('day_detail', due_date=due_date))
 
-# ★★★ 修正箇所 ★★★
 if __name__ == "__main__":
-    import timer
-    
-    
-    # threading を使って、裏側で動かします
-    # daemon=True にすると、アプリ終了時に道連れで終了してくれます
-    eel_thread = threading.Thread(target=timer.run_eel_server, daemon=True)
-    eel_thread.start()
-    
-    # ここまで来れば Flask が動き出します
-    print("Webアプリ(Flask)を起動します: http://127.0.0.1:5001")
-    
-    # use_reloader=False は必須です
-    app.run(port=5001, debug=True, use_reloader=False)
+    app.run(port=5001, debug=True)
