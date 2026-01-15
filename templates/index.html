@@ -1,182 +1,207 @@
 <!doctype html>
 <html lang="ja">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Schedule Manager - ダッシュボード</title>
+        <style>
+            /* 元のベーススタイルに完全一致 */
+            html, body { height: 100%; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#222; }
+            .container { display: flex; flex-direction: column; height: 100vh; }
+            
+            /* ヘッダーの配色を一致 */
+            .header { background: #34495e; color: #fff; padding: 16px 20px; }
+            .header h1 { margin: 0; font-size: 1.2rem; }
 
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Schedule Manager - ダッシュボード</title>
-		<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-	</head>
-	<body>
-		<div class="container">
-			<header class="header">
-				<h1>Schedule Manager - ダッシュボード</h1>
-			</header>
+            /* 上部パネル */
+            .top-area { flex: 0 0 auto; padding: 12px; background: #fff; }
+            .top-grid { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+            .panel { background: #fff; border: 1px solid #e0e0e0; padding: 12px; border-radius: 4px; }
+            .panel h2 { margin-top: 0; font-size: 1rem; color: #333; }
 
-			<main class="top-area">
-				<div class="top-grid">
-					<section class="panel">
-						<h2 id="todayTitle">今日の予定</h2>
-						<p>ここに Bさん（TODO）から渡された今日の予定が表示されます。（例：英語 30分）</p>
-					</section>
+            /* 今日の予定：ご要望の「文字だけ横並び」スタイル */
+            .simple-text-list {
+                display: flex;
+                gap: 20px;
+                overflow-x: auto;
+                padding: 10px 0;
+                font-size: 0.95rem;
+                white-space: nowrap;
+            }
 
-					<aside class="panel">
-						{% if tasks %}
-							<ul style="padding-left: 20px; margin: 0; color: #c0392b; font-weight: bold;">
-								{% for task in tasks %}
-									<li style="margin-bottom: 8px;">
-										{{ task.task }}
-										<span style="font-size: 0.8rem; color: #666; font-weight: normal;">(期限: {{ task.due_date }})</span>
-									</li>
-								{% endfor %}
-							</ul>
-						{% else %}
-							<p style="color: #27ae60; margin: 0;">🎉 やり残しはありません！</p>
-						{% endif %}
-					</aside>
-				</div>
-			</main>
+            /* カレンダーエリア：構造を一致 */
+            .calendar-area { 
+                position: relative; 
+                flex: 1; 
+                background: #fff; 
+                padding: 12px; 
+                display: flex; 
+                flex-direction: column;
+            }
+            .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+            .cal-header .title { font-weight: bold; font-size: 1.1rem; }
+            .cal-controls button { background: #34495e; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; margin-left: 4px; }
 
-			<section class="calendar-area">
-				<div class="calendar" id="calendarRoot">
-					<div class="cal-header">
-						<div class="title" id="calTitle">Loading...</div>
-						<div class="cal-controls">
-							<button id="prevBtn">◀</button>
-							<button id="nextBtn">▶</button>
-						</div>
-					</div>
+            .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #555; padding-bottom: 8px; }
+            .days { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 1fr; gap: 4px; flex: 1; }
+            
+            /* 日付マス：元の枠線・配色スタイル */
+            .day { 
+                background: #fff; 
+                border: 1px solid #eee; 
+                border-radius: 4px; 
+                padding: 6px; 
+                position: relative; 
+                cursor: pointer;
+            }
+            .day .date { font-weight: bold; color: #777; font-size: 0.85rem; }
+            
+            /* 今日の日付（黄色） */
+            .day.today { background-color: #fffde7; border: 1px solid #fbc02d; }
+            .day.today .date { color: #000; }
+            .day.other-month .date { color: #ccc; }
 
-					<div class="weekdays">
-						<div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
-					</div>
+            /* 達成率グラフ：左下に「重ねる」ためのスタイル */
+            .calendar-chart {
+                position: absolute;
+                left: 20px;
+                bottom: 20px;
+                width: 130px; 
+                height: 130px;
+                background: rgba(255, 255, 255, 0.98); /* 下が少し透ける白 */
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                z-index: 1000; /* カレンダーのマス目より上に表示 */
+            }
+            .calendar-chart canvas { width: 100% !important; height: 80px !important; }
+            .chart-label { font-size: 0.65rem; color: #888; margin-top: 4px; }
+            .chart-center-badge { position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; font-size: 0.9rem; }
 
-					<div class="days" id="daysGrid"></div>
+            @media (max-width:700px){ .top-grid { grid-template-columns: 1fr; } .calendar-chart { display: none; } }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header class="header">
+                <h1>Schedule Manager - ダッシュボード</h1>
+            </header>
 
-					<!-- カレンダー中央〜下に月間達成率と科目別時間のグラフを重ねて表示 -->
-					<div class="calendar-charts">
-						<div class="chart-box">
-							<canvas id="completionChart" width="160" height="120"></canvas>
-							<div class="chart-label">今月の達成率</div>
-						</div>
-						<div class="chart-box">
-							<canvas id="subjectChart" width="160" height="120"></canvas>
-							<div class="chart-label">科目別時間割合</div>
-						</div>
-					</div>
-				</div>
-			</section>
-		</div>
+            <main class="top-area">
+                <div class="top-grid">
+                    <section class="panel">
+                        <h2 id="todayTitle">今日の予定 (1月8日)</h2>
+                        <div class="simple-text-list">
+                            {% if today_todos %}
+                                {% for todo in today_todos %}
+                                    <span>{{ todo.task }} ({{ todo.actual_time }}分)</span>
+                                {% endfor %}
+                            {% else %}
+                                <span style="color:#888;">予定なし</span>
+                            {% endif %}
+                        </div>
+                    </section>
 
-		<script>
-			(function(){
-				const titleEl = document.getElementById('calTitle');
-				const daysGrid = document.getElementById('daysGrid');
-				const prevBtn = document.getElementById('prevBtn');
-				const nextBtn = document.getElementById('nextBtn');
-				const todayTitleEl = document.getElementById('todayTitle');
+                    <aside class="panel">
+                        <h2>やり残し</h2>
+                        {% if tasks %}
+                            <ul style="padding-left: 20px; margin: 0; color: #e74c3c; font-weight: bold; font-size: 0.9rem;">
+                                {% for task in tasks %}
+                                    <li>{{ task.task }} ({{ task.due_date }})</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p style="color: #27ae60; margin: 0; font-size: 0.9rem;">🎉 やり残しはありません！</p>
+                        {% endif %}
+                    </aside>
+                </div>
+            </main>
 
-				const today = new Date();
-				const todayYear = today.getFullYear();
-				const todayMonth = today.getMonth();
-				const todayDate = today.getDate();
+            <section class="calendar-area">
+                <div class="calendar" id="calendarRoot">
+                    <div class="cal-header">
+                        <div class="title" id="calTitle"></div>
+                        <div class="cal-controls">
+                            <button id="prevBtn">◀</button>
+                            <button id="nextBtn">▶</button>
+                        </div>
+                    </div>
+                    <div class="weekdays">
+                        <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+                    </div>
+                    <div class="days" id="daysGrid"></div>
+                </div>
 
-				todayTitleEl.textContent = `今日の予定 (${todayMonth + 1}月${todayDate}日)`;
+                <div class="calendar-chart" id="chartContainer">
+                    <canvas id="completionChart"></canvas>
+                    <div class="chart-label">今月の達成率</div>
+                </div>
+            </section>
+        </div>
 
-				let current = new Date();
-				current.setDate(1);
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+        (function(){
+            const daysGrid = document.getElementById('daysGrid');
+            const titleEl = document.getElementById('calTitle');
+            const today = new Date();
+            let current = new Date(); current.setDate(1);
 
-				function render(monthDate){
-					daysGrid.innerHTML = '';
-					const year = monthDate.getFullYear();
-					const month = monthDate.getMonth();
-					titleEl.textContent = `${year}年 ${month+1}月`;
+            function render(monthDate){
+                daysGrid.innerHTML = '';
+                const year = monthDate.getFullYear();
+                const month = monthDate.getMonth();
+                titleEl.textContent = `${year}年 ${month+1}月`;
 
-					const firstDay = new Date(year, month, 1).getDay();
-					const daysInMonth = new Date(year, month+1, 0).getDate();
-					const prevDays = new Date(year, month, 0).getDate();
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month+1, 0).getDate();
+                const prevMonthLastDay = new Date(year, month, 0).getDate();
 
-					const totalCells = 42;
+                for(let i=0; i<42; i++){
+                    const cell = document.createElement('div');
+                    cell.className = 'day';
+                    let d;
+                    if(i < firstDay){
+                        cell.classList.add('other-month');
+                        d = prevMonthLastDay - (firstDay - i - 1);
+                    } else if(i >= firstDay + daysInMonth){
+                        cell.classList.add('other-month');
+                        d = i - (firstDay + daysInMonth) + 1;
+                    } else {
+                        d = i - firstDay + 1;
+                        const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                        if(year===today.getFullYear() && month===today.getMonth() && d===today.getDate()) cell.classList.add('today');
+                        cell.onclick = () => location.href = `/due_date/${ds}`;
+                    }
+                    cell.innerHTML = `<div class="date">${d}</div>`;
+                    daysGrid.appendChild(cell);
+                }
+            }
 
-					for(let i=0; i<totalCells; i++){
-						const cell = document.createElement('div');
-						cell.className = 'day';
+            document.getElementById('prevBtn').onclick = () => { current.setMonth(current.getMonth()-1); render(current); };
+            document.getElementById('nextBtn').onclick = () => { current.setMonth(current.getMonth()+1); render(current); };
+            render(current);
 
-						const dayNumber = i - firstDay + 1;
-						const dateEl = document.createElement('div');
-						dateEl.className = 'date';
-
-						let targetDate;
-						if(i < firstDay){
-							const d = prevDays - (firstDay - 1 - i);
-							dateEl.textContent = d;
-							cell.classList.add('other-month');
-							targetDate = new Date(year, month - 1, d);
-						} else if(dayNumber > daysInMonth){
-							const d = dayNumber - daysInMonth;
-							dateEl.textContent = d;
-							cell.classList.add('other-month');
-							targetDate = new Date(year, month + 1, d);
-						} else {
-							dateEl.textContent = dayNumber;
-							if(year === todayYear && month === todayMonth && dayNumber === todayDate){
-								cell.classList.add('today');
-							}
-							targetDate = new Date(year, month, dayNumber);
-						}
-
-						cell.appendChild(dateEl);
-						cell.addEventListener('click', function(){
-							const yyyy = targetDate.getFullYear();
-							const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
-							const dd = String(targetDate.getDate()).padStart(2, '0');
-							const selectedDate = `${yyyy}-${mm}-${dd}`;
-							window.location.href = `/due_date/${selectedDate}`;
-						});
-
-						daysGrid.appendChild(cell);
-					}
-				}
-
-				prevBtn.addEventListener('click', ()=>{ current.setMonth(current.getMonth() - 1); render(current); });
-				nextBtn.addEventListener('click', ()=>{ current.setMonth(current.getMonth() + 1); render(current); });
-				render(current);
-			})();
-		</script>
-
-		<!-- Chart.js CDN -->
-		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-		<script>
-			(function(){
-				const canvas = document.getElementById('completionChart');
-				if(!canvas) return;
-
-				function drawChart(completed, total){
-					const notDone = Math.max(total - completed, 0);
-					const percent = total === 0 ? 0 : Math.round((completed/total)*100);
-					if(canvas._chartInstance) canvas._chartInstance.destroy();
-					const ctx = canvas.getContext('2d');
-					canvas._chartInstance = new Chart(ctx, {
-						type: 'doughnut',
-						data: { labels:['達成','未達成'], datasets:[{ data:[completed, notDone], backgroundColor:['#2ecc71','#e74c3c'] }] },
-						options: { cutout: '70%', plugins:{ legend:{ display:false }, tooltip:{ enabled:true } }, maintainAspectRatio:false }
-					});
-					const parent = canvas.parentNode; parent.style.position='relative';
-					let badge = parent.querySelector('.chart-center-badge');
-					if(!badge){ badge = document.createElement('div'); badge.className='chart-center-badge'; badge.style.position='absolute'; badge.style.left='50%'; badge.style.top='50%'; badge.style.transform='translate(-50%,-50%)'; badge.style.fontWeight='700'; badge.style.color='#222'; parent.appendChild(badge); }
-					badge.textContent = total === 0 ? 'データ無し' : percent + '%';
-				}
-
-				fetch('/api/stats/monthly').then(r=>r.json()).then(json=>{ drawChart(json.completed, json.total); }).catch(e=>{ console.error('stats fetch error', e); drawChart(0,0); });
-			})();
-
-			(function(){
-				const canvas = document.getElementById('subjectChart'); if(!canvas) return;
-				function drawSubject(series){ if(canvas._chartInstance) canvas._chartInstance.destroy(); const labels = series.map(s=>s.subject||'未分類'); const data = series.map(s=>s.total||0); const colors = ['#3498db','#9b59b6','#f1c40f','#e67e22','#1abc9c','#95a5a6']; const ctx = canvas.getContext('2d'); canvas._chartInstance = new Chart(ctx, { type:'doughnut', data:{ labels:labels, datasets:[{ data:data, backgroundColor:colors }] }, options:{ plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10 } } }, maintainAspectRatio:false } }); const total = data.reduce((a,b)=>a+b,0); const parent = canvas.parentNode; parent.style.position='relative'; let badge = parent.querySelector('.subject-center'); if(!badge){ badge = document.createElement('div'); badge.className='subject-center'; badge.style.position='absolute'; badge.style.left='50%'; badge.style.top='50%'; badge.style.transform='translate(-50%,-50%)'; badge.style.fontSize='0.9rem'; badge.style.fontWeight='700'; badge.style.color='#222'; parent.appendChild(badge); } badge.textContent = total === 0 ? 'データ無し' : total + '分'; }
-
-				fetch('/api/stats/subject_time').then(r=>r.json()).then(json=>{ if(json.series && json.series.length>0) drawSubject(json.series); else drawSubject([]); }).catch(e=>{ console.error('subject stats fetch error', e); drawSubject([]); });
-			})();
-		</script>
-	</body>
-
+            // グラフAPI取得と描画
+            fetch('/api/stats/monthly').then(r=>r.json()).then(json=>{
+                const percent = json.total === 0 ? 0 : Math.round((json.completed/json.total)*100);
+                new Chart(document.getElementById('completionChart').getContext('2d'), {
+                    type: 'doughnut',
+                    data: { datasets: [{ data: [json.completed, Math.max(0, json.total - json.completed)], backgroundColor: ['#2ecc71', '#e74c3c'], borderWidth: 0 }] },
+                    options: { cutout: '75%', plugins: { legend: { display: false } }, maintainAspectRatio: false }
+                });
+                const badge = document.createElement('div');
+                badge.className = 'chart-center-badge';
+                badge.textContent = percent + '%';
+                document.getElementById('chartContainer').appendChild(badge);
+            }).catch(() => {
+                document.getElementById('chartContainer').innerHTML = "<div class='chart-label' style='padding:40px 0;'>データ無し</div>";
+            });
+        })();
+        </script>
+    </body>
 </html>
