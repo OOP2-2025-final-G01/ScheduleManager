@@ -121,15 +121,18 @@ def day_detail(due_date):
     conn.close()
     return render_template('day_detail.html', due_date=due_date, todos=todos)
 
-
 @app.route('/add/<due_date>', methods=['POST'])
 def add(due_date):
     task_content = request.form.get('task_name')
+    duration = request.form.get('duration') 
+    
     if task_content and task_content.strip():
         conn = get_db_connection()
-        conn.execute("INSERT INTO todos (task, due_date) VALUES (?, ?)", (task_content, due_date))
+        conn.execute("INSERT INTO todos (task, due_date, duration, actual_time, is_completed) VALUES (?, ?, ?, 0, 0)", 
+                     (task_content, due_date, duration))
         conn.commit()
         conn.close()
+        
     return redirect(url_for('day_detail', due_date=due_date))
 
 
