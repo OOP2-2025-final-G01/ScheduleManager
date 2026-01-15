@@ -32,7 +32,7 @@ source .venv/bin/activate
 
 依存をインストール
 pip install -r requirements.txt
-pip install eel
+<br>pip install eel
 
 起動後にブラウザで http://127.0.0.1:5001/ を開くとダッシュボード（`templates/index.html`）が表示されます。
 
