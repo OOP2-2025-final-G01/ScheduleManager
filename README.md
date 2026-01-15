@@ -31,7 +31,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 <br>pip install eel
 
-起動するコード<br>
+ディレクトリ名ScheduleManagerで、起動するためのコード<br>
 python app.py
 
 起動後にブラウザで http://127.0.0.1:5001/ を開くとダッシュボード（`templates/index.html`）が表示されます。
