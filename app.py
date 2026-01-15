@@ -178,7 +178,7 @@ def day_detail(due_date):
 def add(due_date):
     task_content = request.form.get('task_name')
 
-    duration = request.form.get('actual_time', 0)
+    duration = int(request.form.get('duration', 0))
 
     if task_content and task_content.strip():
         conn = get_db_connection()
