@@ -1,3 +1,4 @@
+
 """
 ScheduleManager - Flask app
 
@@ -10,6 +11,7 @@ ScheduleManager - Flask app
 起動:
   PORT=5001 python app.py
 """
+
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 import os
@@ -28,7 +30,14 @@ def get_db_connection():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    today_str = date.today().strftime('%Y-%m-%d')
+    conn = get_db_connection()
+    # 今日のTODOをDBから取得
+    today_todos = conn.execute(
+        "SELECT * FROM todos WHERE due_date = ? ORDER BY id DESC", (today_str,)
+    ).fetchall()
+    conn.close()
+    return render_template('index.html', today_todos=today_todos, today_str=today_str)
 
 
 @app.route('/api/stats/monthly')
@@ -124,8 +133,9 @@ def day_detail(due_date):
 @app.route('/add/<due_date>', methods=['POST'])
 def add(due_date):
     task_content = request.form.get('task_name')
-    duration = request.form.get('duration') 
-    
+
+    time_val = request.form.get('actual_time', 0)
+
     if task_content and task_content.strip():
         conn = get_db_connection()
         conn.execute("INSERT INTO todos (task, due_date, duration, actual_time, is_completed) VALUES (?, ?, ?, 0, 0)", 
@@ -144,13 +154,24 @@ def delete(task_id, due_date):
     conn.close()
     return redirect(url_for('day_detail', due_date=due_date))
 
-
 @app.errorhandler(404)
 def page_not_found(e):
     # 開発時は index を返して SPA ライクに振る
     return render_template('index.html'), 200
 
-
 if __name__ == '__main__':
+    # 1. データベースがなければテーブルを作る（重要！）
+    init_db() 
+    
+    # 2. ポート番号の設定（mainの書き方を採用）
     port = int(os.environ.get('PORT', 5001))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    
+    # 3. タイマー(Eel)の起動（以前のステップで追加したコード）
+    import timer
+    eel_thread = threading.Thread(target=timer.run_eel_server, daemon=True)
+    eel_thread.start()
+    
+    print(f"Webアプリ(Flask)を起動します: http://127.0.0.1:{port}")
+    
+    # 4. Flaskの起動（use_reloader=False はタイマー併用時に推奨）
+    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
