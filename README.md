@@ -29,8 +29,8 @@ source .venv/bin/activate
 
 | 依存関係のインストール |
 | :--- |
-| `pip install -r requirements.txt` |
-| `pip install eel` |
+| ```pip install -r requirements.txt``` |
+| ```pip install eel``` |
 
 ディレクトリ名ScheduleManagerで、起動するためのコード<br>
 python app.py
