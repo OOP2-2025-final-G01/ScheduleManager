@@ -28,8 +28,8 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 依存をインストール
-pip install -r requirements.txt
-<br>pip install eel
+|pip install -r requirements.txt|
+pip install eel|
 
 ディレクトリ名ScheduleManagerで、起動するためのコード<br>
 python app.py
