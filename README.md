@@ -78,11 +78,11 @@ python app.py
 
 ## アプリ画像
 
-- トップページ（top.jpg）
-    - ![](top.jpg)
-- タスク追加画面1(task1.jpg)
-    - ![](task1.jpg)
-- タスク追加画面2(task2.jpg)
+- トップページ（top.png）
+    - ![](top.png)
+- タスク追加画面1(task1.png)
+    - ![](task1.png)
+- タスク追加画面2(task2.png)
     - ![](task2.png)
-- タイマー画面(timer.jpg)
-    - ![](timer.jpeg)
+- タイマー画面(timer.png)
+    - ![](timer.png)
