@@ -54,10 +54,12 @@ app.py起動にあたって環境設定が必要な可能性があります。�
 python3 -m venv .venv
 source .venv/bin/activate
 
-| 依存関係のインストール |
-| :--- |
-| `pip install -r requirements.txt` |
-| `pip install eel` |
+#### 依存関係のインストール
+
+- **一括インストール**
+  ```bash
+  pip install -r requirements.txt
+  pip install eel
 
 ディレクトリ名ScheduleManagerで、起動するためのコード<br>
 python app.py
@@ -73,11 +75,11 @@ python app.py
 各メンバーの役割
 | 氏名(学籍番号) | アカウントURL | 役割 |
 | :--: | :--: | :--: |
-| 兼岩瑶平(K24046) | github~ | アプリケーション設計と統合（全体管理担当）|
-| 神納雄雅(K24052) | github~ | 集中タイマーの設計と実装（集中タイマー担当） |
-| 神部愛奈(K24053) | github~ | 履歴・リマインド機能の実装（履歴・リマインド担当） |
-| 冨田琉晴(K24106) | github~ | TODOリスト機能の設計と実装（TODOリスト担当） |
-| 武藤快晟(K24140) | github~ | 勉強ログ・グラフの実装とダッシュボード統合（勉強ログ・グラフ担当） |
+| 兼岩瑶平(K24046) | https://github.com/youkan-wq | アプリケーション設計と統合（全体管理担当）|
+| 神納雄雅(K24052) | https://github.com/sinnoua4 | 集中タイマーの設計と実装（集中タイマー担当） |
+| 神部愛奈(K24053) | https://github.com/aina2525 | 履歴・リマインド機能の実装（履歴・リマインド担当） |
+| 冨田琉晴(K24106) | https://github.com/ryuchan0413to-cmyk | TODOリスト機能の設計と実装（TODOリスト担当） |
+| 武藤快晟(K24140) | https://github.com/cancer-flos | 勉強ログ・グラフの実装とダッシュボード統合（勉強ログ・グラフ担当） |
 
 
 機能追加などの質問は
