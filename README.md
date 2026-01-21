@@ -54,7 +54,7 @@ app.py起動にあたって環境設定が必要な可能性があります。�
 python3 -m venv .venv
 source .venv/bin/activate
 
-### 依存関係のインストール
+#### 依存関係のインストール
 
 - **一括インストール**
   ```bash
